@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth';
-import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, writeBatch, onSnapshot } from 'firebase/firestore';
+import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -33,6 +33,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [notification, setNotification] = useState(null);
   const [selectedClassId, setSelectedClassId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const [users, setUsers] = useState([]);
   const [classes, setClasses] = useState([]);
@@ -130,6 +131,7 @@ export default function App() {
       onSnapshot(collection(db, 'users'), s => setUsers(s.docs.map(d => ({ id: d.id, ...d.data() })))),
       onSnapshot(collection(db, 'classes'), s => setClasses(s.docs.map(d => ({ id: d.id, ...d.data() })))),
       onSnapshot(collection(db, 'attendanceCodes'), s => setAttendanceCodes(s.docs.map(d => ({ id: d.id, ...d.data() })))),
+      onSnapshot(collection(db, 'projects'), s => setProjects(s.docs.map(d => ({ id: d.id, ...d.data() })))),
     ];
     return () => unsubs.forEach(u => u());
   }, [currentUser]);
@@ -251,6 +253,81 @@ export default function App() {
     } catch { showNotification('Failed to leave team', 'error'); }
   };
 
+  // DELETE FUNCTIONS (Instructor Only)
+  const deleteStudentFromClass = async (userId) => {
+    try {
+      const enrollment = classEnrollments.find(e => e.userId === userId && e.classId === selectedClassId);
+      if (enrollment) {
+        // Remove from team if in one
+        const team = teams.find(t => t.id === enrollment.teamId);
+        if (team) {
+          await updateDoc(doc(db, 'teams', team.id), { members: team.members.filter(m => m !== userId) });
+        }
+        // Delete enrollment
+        await deleteDoc(doc(db, 'enrollments', enrollment.id));
+        showNotification('Student removed from class');
+      }
+    } catch { showNotification('Failed to remove student', 'error'); }
+    setConfirmDelete(null);
+  };
+
+  const deleteTeam = async (teamId) => {
+    try {
+      // Remove team from all enrollments
+      const batch = writeBatch(db);
+      classEnrollments.filter(e => e.teamId === teamId).forEach(e => {
+        batch.update(doc(db, 'enrollments', e.id), { teamId: null });
+      });
+      batch.delete(doc(db, 'teams', teamId));
+      await batch.commit();
+      showNotification('Team deleted');
+    } catch { showNotification('Failed to delete team', 'error'); }
+    setConfirmDelete(null);
+  };
+
+  const deleteProject = async (projectId) => {
+    try {
+      const batch = writeBatch(db);
+      // Delete all peer evaluations for this project
+      peerEvaluations.filter(e => e.projectId === projectId).forEach(e => {
+        batch.delete(doc(db, 'peerEvaluations', e.id));
+      });
+      // Delete all team rankings for this project
+      teamRankings.filter(r => r.projectId === projectId).forEach(r => {
+        batch.delete(doc(db, 'teamRankings', r.id));
+      });
+      // Delete the project
+      batch.delete(doc(db, 'projects', projectId));
+      await batch.commit();
+      if (selectedProject === projectId) setSelectedProject(null);
+      showNotification('Project and all evaluations deleted');
+    } catch { showNotification('Failed to delete project', 'error'); }
+    setConfirmDelete(null);
+  };
+
+  const deleteAttendanceRecord = async (recordId) => {
+    try {
+      await deleteDoc(doc(db, 'attendanceRecords', recordId));
+      showNotification('Attendance record deleted');
+    } catch { showNotification('Failed to delete record', 'error'); }
+    setConfirmDelete(null);
+  };
+
+  const clearAllEvaluations = async (projectId) => {
+    try {
+      const batch = writeBatch(db);
+      peerEvaluations.filter(e => e.projectId === projectId).forEach(e => {
+        batch.delete(doc(db, 'peerEvaluations', e.id));
+      });
+      teamRankings.filter(r => r.projectId === projectId).forEach(r => {
+        batch.delete(doc(db, 'teamRankings', r.id));
+      });
+      await batch.commit();
+      showNotification('All evaluations cleared');
+    } catch { showNotification('Failed to clear evaluations', 'error'); }
+    setConfirmDelete(null);
+  };
+
   // Attendance
   const generateAttendanceCode = async () => {
     if (!selectedClassId) return;
@@ -363,6 +440,13 @@ export default function App() {
     return { total: dates.length, students: students.map(s => ({ ...s, attended: classRecords.filter(r => r.userId === s.id).length, rate: dates.length ? Math.round(classRecords.filter(r => r.userId === s.id).length / dates.length * 100) : 0 }))};
   };
 
+  const getAttendanceDetails = () => {
+    return attendanceRecords.filter(r => r.classId === selectedClassId).map(r => {
+      const student = users.find(u => u.id === r.userId);
+      return { ...r, studentName: student?.name || 'Unknown', studentEmail: student?.email || '' };
+    }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  };
+
   const getPeerEvalResults = (projectId) => {
     const evals = peerEvaluations.filter(e => e.projectId === projectId);
     return getClassStudents().map(s => {
@@ -386,7 +470,25 @@ export default function App() {
   const btnStyle = "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-semibold px-6 py-3 rounded-xl transition-all cursor-pointer disabled:opacity-50";
   const btnSecondary = "bg-slate-700 hover:bg-slate-600 text-slate-100 px-4 py-2 rounded-xl transition cursor-pointer";
   const btnDanger = "bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-xl transition border border-red-500/30 cursor-pointer";
+  const btnDangerSmall = "bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2 py-1 rounded-lg transition border border-red-500/30 cursor-pointer text-xs";
   const tabStyle = (active) => `px-4 py-2 rounded-lg transition font-medium cursor-pointer ${active ? 'bg-amber-500 text-slate-900' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'}`;
+
+  // Confirmation Modal
+  const ConfirmModal = () => {
+    if (!confirmDelete) return null;
+    return (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className={`${cardStyle} max-w-md w-full`}>
+          <h3 className="font-semibold text-lg mb-2 text-red-400">Confirm Delete</h3>
+          <p className="text-slate-300 mb-6">{confirmDelete.message}</p>
+          <div className="flex gap-3 justify-end">
+            <button onClick={() => setConfirmDelete(null)} className={btnSecondary}>Cancel</button>
+            <button onClick={confirmDelete.action} className={btnDanger}>Delete</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Login View
   if (!currentUser) {
@@ -430,6 +532,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+      <ConfirmModal />
       {notification && <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg ${notification.type === 'error' ? 'bg-red-500/90' : 'bg-emerald-500/90'} text-white`}>{notification.message}</div>}
       <header className="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -486,17 +589,17 @@ export default function App() {
 
             {activeTab === 'dashboard' && <div className="grid md:grid-cols-4 gap-4"><div className={cardStyle}><p className="text-slate-400 text-sm mb-1">{isAdmin ? 'Students' : 'My Team'}</p><p className="text-3xl font-bold">{isAdmin ? getClassStudents().length : (getMyTeam()?.name || 'None')}</p></div><div className={cardStyle}><p className="text-slate-400 text-sm mb-1">Teams</p><p className="text-3xl font-bold">{getClassTeams().length}</p></div><div className={cardStyle}><p className="text-slate-400 text-sm mb-1">Projects</p><p className="text-3xl font-bold">{getClassProjects().length}</p></div><div className={cardStyle}><p className="text-slate-400 text-sm mb-1">Attendance</p><p className="text-3xl font-bold">{isAdmin ? [...new Set(attendanceRecords.filter(r => r.classId === selectedClassId).map(r => new Date(r.timestamp).toDateString()))].length : attendanceRecords.filter(r => r.userId === currentUser.uid && r.classId === selectedClassId).length}</p></div></div>}
 
-            {isAdmin && activeTab === 'attendance' && <div className="space-y-6"><div className={cardStyle}><h3 className="font-semibold mb-4">Generate Attendance Code</h3><button onClick={generateAttendanceCode} className={btnStyle}>Generate Code ({codeExpiryMinutes} min)</button>{attendanceCodes.filter(c => c.classId === selectedClassId && new Date(c.expiresAt) > new Date()).map(c => <div key={c.id} className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl"><p className="text-emerald-400 font-mono text-3xl">{c.code}</p><p className="text-sm text-slate-400 mt-1">Expires: {formatDate(c.expiresAt)}</p></div>)}</div><div className={cardStyle}><h3 className="font-semibold mb-4">Attendance Records</h3>{getAttendanceStats().students.length > 0 ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">Student</th><th className="pb-3">Team</th><th className="pb-3">Attended</th><th className="pb-3">Rate</th></tr></thead><tbody>{getAttendanceStats().students.map(s => <tr key={s.id} className="border-b border-slate-800"><td className="py-3">{s.name}</td><td className="py-3 text-slate-400">{getUserTeam(s.id)?.name || '-'}</td><td className="py-3">{s.attended}/{getAttendanceStats().total}</td><td className="py-3"><span className={`px-2 py-1 rounded text-sm ${s.rate >= 80 ? 'bg-emerald-500/20 text-emerald-400' : s.rate >= 50 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{s.rate}%</span></td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No students enrolled</p>}</div></div>}
+            {isAdmin && activeTab === 'attendance' && <div className="space-y-6"><div className={cardStyle}><h3 className="font-semibold mb-4">Generate Attendance Code</h3><button onClick={generateAttendanceCode} className={btnStyle}>Generate Code ({codeExpiryMinutes} min)</button>{attendanceCodes.filter(c => c.classId === selectedClassId && new Date(c.expiresAt) > new Date()).map(c => <div key={c.id} className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl"><p className="text-emerald-400 font-mono text-3xl">{c.code}</p><p className="text-sm text-slate-400 mt-1">Expires: {formatDate(c.expiresAt)}</p></div>)}</div><div className={cardStyle}><h3 className="font-semibold mb-4">Attendance Summary</h3>{getAttendanceStats().students.length > 0 ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">Student</th><th className="pb-3">Team</th><th className="pb-3">Attended</th><th className="pb-3">Rate</th></tr></thead><tbody>{getAttendanceStats().students.map(s => <tr key={s.id} className="border-b border-slate-800"><td className="py-3">{s.name}</td><td className="py-3 text-slate-400">{getUserTeam(s.id)?.name || '-'}</td><td className="py-3">{s.attended}/{getAttendanceStats().total}</td><td className="py-3"><span className={`px-2 py-1 rounded text-sm ${s.rate >= 80 ? 'bg-emerald-500/20 text-emerald-400' : s.rate >= 50 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{s.rate}%</span></td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No students enrolled</p>}</div><div className={cardStyle}><h3 className="font-semibold mb-4">All Attendance Records</h3>{getAttendanceDetails().length > 0 ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">Student</th><th className="pb-3">Date/Time</th><th className="pb-3">Code</th><th className="pb-3">Action</th></tr></thead><tbody>{getAttendanceDetails().map(r => <tr key={r.id} className="border-b border-slate-800"><td className="py-3">{r.studentName}</td><td className="py-3 text-slate-400">{formatDate(r.timestamp)}</td><td className="py-3 font-mono text-xs">{r.code}</td><td className="py-3"><button onClick={() => setConfirmDelete({ message: `Delete attendance record for ${r.studentName} on ${formatDate(r.timestamp)}?`, action: () => deleteAttendanceRecord(r.id) })} className={btnDangerSmall}>Delete</button></td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No records yet</p>}</div></div>}
 
             {!isAdmin && activeTab === 'attendance' && <div className={cardStyle}><h3 className="font-semibold mb-4">Mark Attendance</h3><div className="flex gap-3 mb-6"><input type="text" className={inputStyle} placeholder="Enter code" value={attendanceInput} onChange={e => setAttendanceInput(e.target.value.toUpperCase())} maxLength={6} onKeyDown={e => e.key === 'Enter' && submitAttendance()} /><button onClick={submitAttendance} className={btnStyle}>Submit</button></div><h4 className="font-medium text-slate-300 mb-3">Your History</h4>{attendanceRecords.filter(r => r.userId === currentUser.uid && r.classId === selectedClassId).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).map(r => <div key={r.id} className="flex justify-between p-3 bg-slate-900/50 rounded-xl mb-2"><span>{formatDate(r.timestamp)}</span><span className="text-emerald-400">✓ Present</span></div>)}{attendanceRecords.filter(r => r.userId === currentUser.uid && r.classId === selectedClassId).length === 0 && <p className="text-slate-500 text-center py-4">No records yet</p>}</div>}
 
-            {isAdmin && activeTab === 'students' && <div className={cardStyle}><h3 className="font-semibold mb-4">Students ({getClassStudents().length})</h3>{getClassStudents().length > 0 ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">Name</th><th className="pb-3">Email</th><th className="pb-3">Team</th></tr></thead><tbody>{getClassStudents().map(s => <tr key={s.id} className="border-b border-slate-800"><td className="py-3">{s.name}</td><td className="py-3 text-slate-400">{s.email}</td><td className="py-3">{getUserTeam(s.id)?.name || '-'}</td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">Share code: <span className="font-mono text-amber-400">{selectedClass?.joinCode}</span></p>}</div>}
+            {isAdmin && activeTab === 'students' && <div className={cardStyle}><h3 className="font-semibold mb-4">Students ({getClassStudents().length})</h3>{getClassStudents().length > 0 ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">Name</th><th className="pb-3">Email</th><th className="pb-3">Team</th><th className="pb-3">Action</th></tr></thead><tbody>{getClassStudents().map(s => <tr key={s.id} className="border-b border-slate-800"><td className="py-3">{s.name}</td><td className="py-3 text-slate-400">{s.email}</td><td className="py-3">{getUserTeam(s.id)?.name || '-'}</td><td className="py-3"><button onClick={() => setConfirmDelete({ message: `Remove ${s.name} from this class? Their attendance and evaluations will remain.`, action: () => deleteStudentFromClass(s.id) })} className={btnDangerSmall}>Remove</button></td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">Share code: <span className="font-mono text-amber-400">{selectedClass?.joinCode}</span></p>}</div>}
 
-            {isAdmin && activeTab === 'teams' && (getClassTeams().length > 0 ? <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">{getClassTeams().map(team => <div key={team.id} className={cardStyle}><h3 className="font-semibold mb-3">{team.name}</h3><p className="text-sm text-slate-400 mb-3">{team.members.length} members</p>{team.members.map(mid => { const m = users.find(u => u.id === mid); return m ? <div key={mid} className="flex items-center gap-2 text-sm mb-1"><div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-xs">{m.name?.charAt(0) || '?'}</div><span>{m.name || m.email}</span></div> : null; })}</div>)}</div> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">No teams yet</p></div>)}
+            {isAdmin && activeTab === 'teams' && (getClassTeams().length > 0 ? <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">{getClassTeams().map(team => <div key={team.id} className={cardStyle}><div className="flex justify-between items-start mb-3"><h3 className="font-semibold">{team.name}</h3><button onClick={() => setConfirmDelete({ message: `Delete team "${team.name}"? Members will be removed from the team but stay in the class.`, action: () => deleteTeam(team.id) })} className={btnDangerSmall}>Delete</button></div><p className="text-sm text-slate-400 mb-3">{team.members.length} members</p>{team.members.map(mid => { const m = users.find(u => u.id === mid); return m ? <div key={mid} className="flex items-center gap-2 text-sm mb-1"><div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-xs">{m.name?.charAt(0) || '?'}</div><span>{m.name || m.email}</span></div> : null; })}</div>)}</div> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">No teams yet</p></div>)}
 
-            {isAdmin && activeTab === 'projects' && <div className="space-y-6"><div className={cardStyle}><h3 className="font-semibold mb-4">Create Project</h3><div className="flex gap-3"><input type="text" className={inputStyle} placeholder="e.g., Midterm Presentation" value={newProjectName} onChange={e => setNewProjectName(e.target.value)} onKeyDown={e => e.key === 'Enter' && createProject()} /><button onClick={createProject} className={btnStyle}>Create</button></div></div>{getClassProjects().length > 0 ? <div className="grid md:grid-cols-2 gap-4">{getClassProjects().map(p => <div key={p.id} className={cardStyle}><h3 className="font-semibold mb-2">{p.name}</h3><p className="text-sm text-slate-400">{peerEvaluations.filter(e => e.projectId === p.id).length} peer evals • {teamRankings.filter(r => r.projectId === p.id).length} team rankings</p></div>)}</div> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">Create projects like "Midterm Presentation"</p></div>}</div>}
+            {isAdmin && activeTab === 'projects' && <div className="space-y-6"><div className={cardStyle}><h3 className="font-semibold mb-4">Create Project</h3><div className="flex gap-3"><input type="text" className={inputStyle} placeholder="e.g., Midterm Presentation" value={newProjectName} onChange={e => setNewProjectName(e.target.value)} onKeyDown={e => e.key === 'Enter' && createProject()} /><button onClick={createProject} className={btnStyle}>Create</button></div></div>{getClassProjects().length > 0 ? <div className="grid md:grid-cols-2 gap-4">{getClassProjects().map(p => <div key={p.id} className={cardStyle}><div className="flex justify-between items-start mb-2"><h3 className="font-semibold">{p.name}</h3><button onClick={() => setConfirmDelete({ message: `Delete project "${p.name}" and ALL its evaluations? This cannot be undone.`, action: () => deleteProject(p.id) })} className={btnDangerSmall}>Delete</button></div><p className="text-sm text-slate-400">{peerEvaluations.filter(e => e.projectId === p.id).length} peer evals • {teamRankings.filter(r => r.projectId === p.id).length} team rankings</p></div>)}</div> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">Create projects like "Midterm Presentation"</p></div>}</div>}
 
-            {isAdmin && activeTab === 'evaluations' && <div className="space-y-6">{getClassProjects().length > 0 ? <><div className="flex gap-3 flex-wrap">{getClassProjects().map(p => <button key={p.id} onClick={() => setSelectedProject(p.id)} className={tabStyle(selectedProject === p.id)}>{p.name}</button>)}</div>{selectedProject && <><div className={cardStyle}><h3 className="font-semibold mb-4">Peer Evaluation Results</h3>{getPeerEvalResults(selectedProject).some(s => s.evalCount > 0) ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">#</th><th className="pb-3">Student</th><th className="pb-3">Team</th><th className="pb-3">Avg Rank</th><th className="pb-3">Avg Score</th></tr></thead><tbody>{getPeerEvalResults(selectedProject).map((s, i) => <tr key={s.id} className="border-b border-slate-800"><td className="py-3"><span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${i === 0 ? 'bg-amber-500 text-slate-900' : 'bg-slate-700'}`}>{i + 1}</span></td><td className="py-3">{s.name}</td><td className="py-3 text-slate-400">{s.team}</td><td className="py-3">{s.avgRanking}</td><td className="py-3">{s.avgScore}/10</td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No evaluations yet</p>}</div><div className={cardStyle}><h3 className="font-semibold mb-4">Team Ranking Results</h3>{getTeamRankingResults(selectedProject).some(t => t.evalCount > 0) ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">#</th><th className="pb-3">Team</th><th className="pb-3">Rank</th><th className="pb-3">Present</th><th className="pb-3">Content</th><th className="pb-3">Creative</th></tr></thead><tbody>{getTeamRankingResults(selectedProject).map((t, i) => <tr key={t.id} className="border-b border-slate-800"><td className="py-3"><span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${i === 0 ? 'bg-amber-500 text-slate-900' : 'bg-slate-700'}`}>{i + 1}</span></td><td className="py-3">{t.name}</td><td className="py-3">{t.avgRanking}</td><td className="py-3">{t.avgPresentation}</td><td className="py-3">{t.avgContent}</td><td className="py-3">{t.avgCreativity}</td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No rankings yet</p>}</div></>}</> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">Create projects first</p></div>}</div>}
+            {isAdmin && activeTab === 'evaluations' && <div className="space-y-6">{getClassProjects().length > 0 ? <><div className="flex gap-3 flex-wrap">{getClassProjects().map(p => <button key={p.id} onClick={() => setSelectedProject(p.id)} className={tabStyle(selectedProject === p.id)}>{p.name}</button>)}</div>{selectedProject && <><div className={cardStyle}><div className="flex justify-between items-center mb-4"><h3 className="font-semibold">Peer Evaluation Results</h3><button onClick={() => setConfirmDelete({ message: `Clear ALL peer evaluations and team rankings for this project? This cannot be undone.`, action: () => clearAllEvaluations(selectedProject) })} className={btnDangerSmall}>Clear All Evaluations</button></div>{getPeerEvalResults(selectedProject).some(s => s.evalCount > 0) ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">#</th><th className="pb-3">Student</th><th className="pb-3">Team</th><th className="pb-3">Avg Rank</th><th className="pb-3">Avg Score</th></tr></thead><tbody>{getPeerEvalResults(selectedProject).map((s, i) => <tr key={s.id} className="border-b border-slate-800"><td className="py-3"><span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${i === 0 ? 'bg-amber-500 text-slate-900' : 'bg-slate-700'}`}>{i + 1}</span></td><td className="py-3">{s.name}</td><td className="py-3 text-slate-400">{s.team}</td><td className="py-3">{s.avgRanking}</td><td className="py-3">{s.avgScore}/10</td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No evaluations yet</p>}</div><div className={cardStyle}><h3 className="font-semibold mb-4">Team Ranking Results</h3>{getTeamRankingResults(selectedProject).some(t => t.evalCount > 0) ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">#</th><th className="pb-3">Team</th><th className="pb-3">Rank</th><th className="pb-3">Present</th><th className="pb-3">Content</th><th className="pb-3">Creative</th></tr></thead><tbody>{getTeamRankingResults(selectedProject).map((t, i) => <tr key={t.id} className="border-b border-slate-800"><td className="py-3"><span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${i === 0 ? 'bg-amber-500 text-slate-900' : 'bg-slate-700'}`}>{i + 1}</span></td><td className="py-3">{t.name}</td><td className="py-3">{t.avgRanking}</td><td className="py-3">{t.avgPresentation}</td><td className="py-3">{t.avgContent}</td><td className="py-3">{t.avgCreativity}</td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No rankings yet</p>}</div></>}</> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">Create projects first</p></div>}</div>}
 
             {isAdmin && activeTab === 'settings' && <div className="space-y-6"><div className={cardStyle}><h3 className="font-semibold mb-4">Attendance Code Expiration</h3><select className={`${inputStyle} max-w-xs`} value={codeExpiryMinutes} onChange={e => updateCodeExpiry(parseInt(e.target.value))}><option value={2}>2 minutes</option><option value={3}>3 minutes</option><option value={5}>5 minutes</option><option value={10}>10 minutes</option><option value={15}>15 minutes</option><option value={30}>30 minutes</option><option value={60}>1 hour</option></select></div><div className={cardStyle}><h3 className="font-semibold mb-4">Registration Code</h3><p className="text-slate-400 text-sm mb-4">Students need this to register.</p><div className="bg-slate-900/50 rounded-xl p-4 mb-4"><p className="text-xs text-slate-500 mb-1">Current Code</p><p className="text-amber-400 font-mono text-2xl">{registrationCode}</p></div><div className="flex gap-3"><input type="text" className={inputStyle} placeholder="New code" value={newRegCode} onChange={e => setNewRegCode(e.target.value.toUpperCase())} maxLength={6} /><button onClick={updateRegistrationCode} className={btnStyle}>Update</button></div></div><div className={cardStyle}><h3 className="font-semibold mb-4">Share with Students</h3><div className="bg-slate-900/50 rounded-xl p-4 text-sm space-y-2"><p><span className="text-slate-500">1. Website:</span> <span className="text-slate-300">(share this page URL)</span></p><p><span className="text-slate-500">2. Registration Code:</span> <span className="text-amber-400 font-mono">{registrationCode}</span></p><p><span className="text-slate-500">3. Class Join Code:</span> <span className="text-amber-400 font-mono">{selectedClass?.joinCode}</span></p></div></div></div>}
 
