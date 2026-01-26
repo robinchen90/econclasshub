@@ -1,3 +1,17 @@
+/**
+ * ClassHub - Classroom Management System
+ * Attendance Tracking and Peer Evaluation Platform
+ * 
+ * Version: 1.0.0
+ * 
+ * Copyright (c) 2026 Zhengyang Chen
+ * Economics Department, Wilson College of Business
+ * University of Northern Iowa
+ * https://robinchen.org
+ * 
+ * Licensed under the MIT License
+ */
+
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth';
@@ -521,6 +535,7 @@ export default function App() {
               <p className="text-center text-slate-400 text-sm">Already have an account? <span onClick={() => setView('login')} className="text-amber-400 hover:text-amber-300 cursor-pointer">Sign In</span></p>
             </div>
           )}
+          <p className="text-center text-slate-600 text-xs mt-6">© 2026 <a href="https://robinchen.org" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400">Zhengyang Chen</a> • University of Northern Iowa</p>
         </div>
       </div>
     );
@@ -611,6 +626,13 @@ export default function App() {
           </div>
         )}
       </div>
+      
+      {/* Footer */}
+      <footer className="bg-slate-900/50 border-t border-slate-800 py-4 mt-8">
+        <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-xs">
+          <p>© 2026 <a href="https://robinchen.org" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400">Zhengyang Chen</a> • Economics Department, Wilson College of Business, University of Northern Iowa</p>
+        </div>
+      </footer>
     </div>
   );
 }
