@@ -44,7 +44,7 @@ A classroom management system with attendance tracking and peer evaluations, pow
    - `name` (string): Your name (e.g., "Dr. Smith")
    - `email` (string): Your email
    - `role` (string): `admin`
-   - `createdAt` (string): `2025-01-26T00:00:00.000Z`
+   - `createdAt` (string): `2026-01-26T00:00:00.000Z`
 6. Click **Save**
 
 ### Step 4: Create Settings Document
@@ -136,3 +136,21 @@ Use the email and password you created in Step 2 above.
 - Tailwind CSS
 - Vite (build tool)
 - Netlify (hosting)
+
+---
+
+## License & Copyright
+
+MIT License
+
+Copyright © 2026 **Zhengyang Chen**
+
+Economics Department  
+Wilson College of Business  
+University of Northern Iowa
+
+Website: [robinchen.org](https://robinchen.org)
+
+Version: 1.0.0
+
+See [LICENSE](./LICENSE) for full license text.
