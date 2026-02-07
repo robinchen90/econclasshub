@@ -1,638 +1,813 @@
-/**
- * ClassHub - Classroom Management System
- * Attendance Tracking and Peer Evaluation Platform
- * 
- * Version: 1.0.0
- * 
- * Copyright (c) 2026 Zhengyang Chen
- * Economics Department, Wilson College of Business
- * University of Northern Iowa
- * https://robinchen.org
- * 
- * Licensed under the MIT License
- */
+pasted
 
-import { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth';
-import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, onSnapshot } from 'firebase/firestore';
+I want to make it a better paper that will influence the financial literature in January effect. I target top journals. I want you to design several experts (in different chats) that may help this paper in different aspects. and show me a route to fully utilize those experts. 
+Most important thing is that the empirical results are reliable and robust, the interpretation of results is consistent within a consolidated framework and supported by existing literature and framework, writing is cohenrent and state everything step by step and do not confuse readers with undefined new concepts. Think more aspects this paper can improve and design experts respectively.
 
-// Your Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyB2wtDb5erXZ0TiK6dSZUT5h7BlyDWF9Gg",
-  authDomain: "econclasshub.firebaseapp.com",
-  projectId: "econclasshub",
-  storageBucket: "econclasshub.firebasestorage.app",
-  messagingSenderId: "764607858631",
-  appId: "1:764607858631:web:c1c4d442b9e18a8014fbe2",
-  measurementId: "G-2Q3VEQD90L"
-};
+Jan 30
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+Architected multi-phase expert framework to strengthen empirical rigor and theoretical coherence
 
-// Utility functions
-const generateId = () => Math.random().toString(36).substr(2, 9);
-const generateCode = () => Math.random().toString(36).substr(2, 6).toUpperCase();
-const formatDate = (date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-export default function App() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
-  const [view, setView] = useState('login');
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [notification, setNotification] = useState(null);
-  const [selectedClassId, setSelectedClassId] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
 
-  const [users, setUsers] = useState([]);
-  const [classes, setClasses] = useState([]);
-  const [teams, setTeams] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [attendanceCodes, setAttendanceCodes] = useState([]);
-  const [attendanceRecords, setAttendanceRecords] = useState([]);
-  const [peerEvaluations, setPeerEvaluations] = useState([]);
-  const [teamRankings, setTeamRankings] = useState([]);
-  const [classEnrollments, setClassEnrollments] = useState([]);
 
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [registerName, setRegisterName] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [attendanceInput, setAttendanceInput] = useState('');
-  const [newTeamName, setNewTeamName] = useState('');
-  const [newProjectName, setNewProjectName] = useState('');
-  const [newClassName, setNewClassName] = useState('');
-  const [joinClassCode, setJoinClassCode] = useState('');
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [evalFormData, setEvalFormData] = useState({});
-  const [teamEvalFormData, setTeamEvalFormData] = useState({});
-  const [registrationCode, setRegistrationCode] = useState('');
-  const [regCodeInput, setRegCodeInput] = useState('');
-  const [newRegCode, setNewRegCode] = useState('');
-  const [codeExpiryMinutes, setCodeExpiryMinutes] = useState(5);
 
-  // Firebase Auth state listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        const profileDoc = await getDoc(doc(db, 'users', user.uid));
-        if (profileDoc.exists()) {
-          setUserProfile(profileDoc.data());
-          setView(profileDoc.data().role === 'admin' ? 'admin' : 'student');
-        }
-      } else {
-        setCurrentUser(null);
-        setUserProfile(null);
-        setView('login');
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+Expert Panel Design for Your January Effect Paper
+I've analyzed your paper carefully. To achieve publication in a top finance journal (JFE, JF, RFS), you need rigorous validation across multiple dimensions. Here's a structured expert panel and deployment route:
 
-  // Load data when authenticated
-  useEffect(() => {
-    if (!currentUser || !userProfile) return;
-    const loadData = async () => {
-      try {
-        const [classesSnap, teamsSnap, projectsSnap, codesSnap, attendanceSnap, evalsSnap, rankingsSnap, enrollmentsSnap, usersSnap] = await Promise.all([
-          getDocs(collection(db, 'classes')), getDocs(collection(db, 'teams')), getDocs(collection(db, 'projects')),
-          getDocs(collection(db, 'attendanceCodes')), getDocs(collection(db, 'attendanceRecords')), getDocs(collection(db, 'peerEvaluations')),
-          getDocs(collection(db, 'teamRankings')), getDocs(collection(db, 'enrollments')), getDocs(collection(db, 'users'))
-        ]);
-        setClasses(classesSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setTeams(teamsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setProjects(projectsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setAttendanceCodes(codesSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setAttendanceRecords(attendanceSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setPeerEvaluations(evalsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setTeamRankings(rankingsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setClassEnrollments(enrollmentsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+Expert Panel Overview
+Expert	Focus Area	Critical Questions to Address
+1. Econometrician	TVP-FAVARX identification, estimation, inference	Is the methodology bulletproof?
+2. Asset Pricing Theorist	Economic mechanism, market efficiency	Does the story make theoretical sense?
+3. Money & Banking Specialist	Factor interpretation, institutional details	Are the money market claims accurate?
+4. Empirical Finance Referee	Robustness, alternative explanations	What would kill this paper at R&R?
+5. Literature Strategist	Positioning, contribution framing	How to maximize perceived contribution?
+6. Academic Writing Editor	Clarity, flow, precision	Is every claim crystal clear?
+Detailed Expert Specifications
+Expert 1: Econometrician
+Role: Validate methodology and statistical inference
 
-        const settingsDoc = await getDoc(doc(db, 'settings', 'global'));
-        if (settingsDoc.exists()) {
-          if (settingsDoc.data().registrationCode) setRegistrationCode(settingsDoc.data().registrationCode);
-          if (settingsDoc.data().codeExpiryMinutes) setCodeExpiryMinutes(settingsDoc.data().codeExpiryMinutes);
-        } else if (userProfile.role === 'admin') {
-          const defaultCode = generateCode();
-          await setDoc(doc(db, 'settings', 'global'), { registrationCode: defaultCode, codeExpiryMinutes: 5 });
-          setRegistrationCode(defaultCode);
-        }
-        const savedClass = localStorage.getItem('classhub-selectedClass');
-        if (savedClass) setSelectedClassId(savedClass);
-      } catch (err) { console.error('Load error:', err); }
-    };
-    loadData();
-  }, [currentUser, userProfile]);
+Key concerns to address:
 
-  // Real-time listeners
-  useEffect(() => {
-    if (!currentUser) return;
-    const unsubs = [
-      onSnapshot(collection(db, 'attendanceRecords'), s => setAttendanceRecords(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-      onSnapshot(collection(db, 'peerEvaluations'), s => setPeerEvaluations(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-      onSnapshot(collection(db, 'teamRankings'), s => setTeamRankings(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-      onSnapshot(collection(db, 'enrollments'), s => setClassEnrollments(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-      onSnapshot(collection(db, 'teams'), s => setTeams(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-      onSnapshot(collection(db, 'users'), s => setUsers(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-      onSnapshot(collection(db, 'classes'), s => setClasses(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-      onSnapshot(collection(db, 'attendanceCodes'), s => setAttendanceCodes(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-      onSnapshot(collection(db, 'projects'), s => setProjects(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-    ];
-    return () => unsubs.forEach(u => u());
-  }, [currentUser]);
+Is block-recursive identification defensible? Why not use sign restrictions or external instruments?
+The transmission regressions (Table 4) use generated regressors—are standard errors valid?
+Does the random walk specification for parameters miss discrete breaks (e.g., 2008)?
+Why 2 factors? How sensitive are results to factor selection criteria?
+The counterfactual "filtered January effect" construction—is this econometrically valid?
+Deliverables:
 
-  const showNotification = (message, type = 'success') => { setNotification({ message, type }); setTimeout(() => setNotification(null), 3000); };
+Verification of identification assumptions
+Alternative identification strategies to test robustness
+Proper inference accounting for first-stage estimation error
+Formal break tests around 1994, 2008
+Expert 2: Asset Pricing Theorist
+Role: Evaluate economic mechanism and theoretical coherence
 
-  // Auth handlers
-  const handleLogin = async () => {
-    if (!loginEmail || !loginPassword) { showNotification('Please enter email and password', 'error'); return; }
-    setAuthLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-      setLoginEmail(''); setLoginPassword('');
-      showNotification('Welcome back!');
-    } catch (err) {
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') showNotification('Invalid email or password', 'error');
-      else if (err.code === 'auth/too-many-requests') showNotification('Too many attempts. Try later.', 'error');
-      else showNotification('Login failed', 'error');
-    }
-    setAuthLoading(false);
-  };
+Key concerns to address:
 
-  const handleRegister = async () => {
-    if (!registerName || !registerEmail || !registerPassword) { showNotification('Please fill all fields', 'error'); return; }
-    if (registerPassword.length < 6) { showNotification('Password must be at least 6 characters', 'error'); return; }
-    try {
-      const settingsDoc = await getDoc(doc(db, 'settings', 'global'));
-      const currentRegCode = settingsDoc.exists() ? settingsDoc.data().registrationCode : null;
-      if (!currentRegCode) { showNotification('Registration not configured. Contact instructor.', 'error'); return; }
-      if (regCodeInput.toUpperCase() !== currentRegCode.toUpperCase()) { showNotification('Invalid registration code', 'error'); return; }
-    } catch { showNotification('Cannot verify registration code', 'error'); return; }
-    setAuthLoading(true);
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
-      await updateProfile(cred.user, { displayName: registerName });
-      const profile = { id: cred.user.uid, name: registerName, email: registerEmail, role: 'student', createdAt: new Date().toISOString() };
-      await setDoc(doc(db, 'users', cred.user.uid), profile);
-      setUserProfile(profile);
-      showNotification('Registration successful!');
-      setRegisterName(''); setRegisterEmail(''); setRegisterPassword(''); setRegCodeInput('');
-    } catch (err) {
-      if (err.code === 'auth/email-already-in-use') showNotification('Email already registered', 'error');
-      else if (err.code === 'auth/weak-password') showNotification('Password too weak', 'error');
-      else showNotification('Registration failed', 'error');
-    }
-    setAuthLoading(false);
-  };
+You claim the January effect reflects "transmission of fundamental seasonality"—but why would predictable seasonality generate abnormal returns? Doesn't this violate market efficiency?
+The negative IP-Stock relationship in time series: Is your interpretation (cash management efficiency) the only explanation?
+How does your story relate to risk-based explanations (time-varying risk premia)?
+Why doesn't arbitrage eliminate the effect if it's predictable?
+Deliverables:
 
-  const handleLogout = async () => { await signOut(auth); setSelectedClassId(null); setActiveTab('dashboard'); localStorage.removeItem('classhub-selectedClass'); };
+Formal theoretical framework (even a simple model)
+Clear articulation of why predictable seasonality generates returns
+Discussion of limits to arbitrage for small caps
+Connection to consumption-based asset pricing or liquidity risk literature
+Expert 3: Money & Banking Specialist
+Role: Validate factor interpretations and institutional claims
 
-  // Class management
-  const createClass = async () => {
-    if (!newClassName.trim()) return;
-    try {
-      const joinCode = generateCode();
-      const newClass = { id: generateId(), name: newClassName, joinCode, createdAt: new Date().toISOString(), archived: false, createdBy: currentUser.uid };
-      await setDoc(doc(db, 'classes', newClass.id), newClass);
-      setNewClassName('');
-      showNotification(`Class created! Join code: ${joinCode}`);
-    } catch { showNotification('Failed to create class', 'error'); }
-  };
+Key concerns to address:
 
-  const joinClass = async () => {
-    const cls = classes.find(c => c.joinCode === joinClassCode.toUpperCase() && !c.archived);
-    if (!cls) { showNotification('Invalid class code', 'error'); return; }
-    if (classEnrollments.find(e => e.userId === currentUser.uid && e.classId === cls.id)) { showNotification('Already enrolled', 'error'); return; }
-    try {
-      const enrollment = { id: generateId(), userId: currentUser.uid, classId: cls.id, teamId: null, enrolledAt: new Date().toISOString() };
-      await setDoc(doc(db, 'enrollments', enrollment.id), enrollment);
-      setJoinClassCode('');
-      showNotification(`Joined ${cls.name}!`);
-    } catch { showNotification('Failed to join class', 'error'); }
-  };
+Factor 1 as "Banking Preference" and Factor 2 as "Liquidity Preference"—are these labels justified by the loadings?
+The claim that "cash management has become more efficient"—what's the evidence beyond Factor 1 evolution?
+Institutional changes (sweep programs 1994, IOR 2008, ON RRP 2013)—do these create discrete breaks or gradual evolution?
+Are the CFS money data the right choice? How do they compare to Fed H.6 release?
+Deliverables:
 
-  const archiveClass = async (classId) => {
-    try {
-      await updateDoc(doc(db, 'classes', classId), { archived: true });
-      if (selectedClassId === classId) { setSelectedClassId(null); setActiveTab('dashboard'); }
-      showNotification('Class archived');
-    } catch { showNotification('Failed to archive', 'error'); }
-  };
+Validation of factor interpretations with institutional knowledge
+Timeline of money market changes with testable implications
+Subsample analysis around institutional break dates
+Cross-validation with alternative money data sources
+Expert 4: Empirical Finance Referee (Devil's Advocate)
+Role: Simulate hostile referee reports
 
-  const selectClass = (classId) => { setSelectedClassId(classId); localStorage.setItem('classhub-selectedClass', classId); };
-  const deselectClass = () => { setSelectedClassId(null); setActiveTab('dashboard'); localStorage.removeItem('classhub-selectedClass'); };
+Key concerns to address:
 
-  // Team management
-  const createTeam = async () => {
-    if (!newTeamName.trim() || !selectedClassId) return;
-    try {
-      const newTeam = { id: generateId(), name: newTeamName, classId: selectedClassId, members: [currentUser.uid], createdAt: new Date().toISOString() };
-      await setDoc(doc(db, 'teams', newTeam.id), newTeam);
-      const enrollment = classEnrollments.find(e => e.userId === currentUser.uid && e.classId === selectedClassId);
-      if (enrollment) await updateDoc(doc(db, 'enrollments', enrollment.id), { teamId: newTeam.id });
-      setNewTeamName('');
-      showNotification('Team created!');
-    } catch { showNotification('Failed to create team', 'error'); }
-  };
+Tax-loss selling: You don't formally test against this alternative. Why not include December returns or turnover?
+Window dressing: Institutional portfolio rebalancing in December/January—how do you distinguish from your mechanism?
+Data mining: You chose specific factors, specific horizons, specific sample. What if you pre-registered nothing?
+Causality: Table 4 shows correlations between time-varying coefficients—this is NOT causal evidence
+Small sample: Only 53 Januaries. How reliable are the time-varying estimates?
+February effect: You call it "robustness check" but it's actually a separate finding. Is the paper about January or January+February?
+Deliverables:
 
-  const joinTeam = async (teamId) => {
-    const team = teams.find(t => t.id === teamId);
-    if (!team) return;
-    const enrollment = classEnrollments.find(e => e.userId === currentUser.uid && e.classId === selectedClassId);
-    if (enrollment?.teamId) { showNotification('Leave your current team first', 'error'); return; }
-    try {
-      await updateDoc(doc(db, 'teams', teamId), { members: [...team.members, currentUser.uid] });
-      if (enrollment) await updateDoc(doc(db, 'enrollments', enrollment.id), { teamId });
-      showNotification(`Joined team ${team.name}!`);
-    } catch { showNotification('Failed to join team', 'error'); }
-  };
+Comprehensive alternative explanation tests
+Pre-registration-style analysis plan applied retroactively
+Honest assessment of what claims can vs. cannot be made
+Additional robustness checks (different sample, different factors, different lag lengths)
+Expert 5: Literature Strategist
+Role: Position paper for maximum impact
 
-  const leaveTeam = async () => {
-    const enrollment = classEnrollments.find(e => e.userId === currentUser.uid && e.classId === selectedClassId);
-    if (!enrollment?.teamId) return;
-    try {
-      const team = teams.find(t => t.id === enrollment.teamId);
-      if (team) await updateDoc(doc(db, 'teams', team.id), { members: team.members.filter(m => m !== currentUser.uid) });
-      await updateDoc(doc(db, 'enrollments', enrollment.id), { teamId: null });
-      showNotification('Left team');
-    } catch { showNotification('Failed to leave team', 'error'); }
-  };
+Key concerns to address:
 
-  // DELETE FUNCTIONS (Instructor Only)
-  const deleteStudentFromClass = async (userId) => {
-    try {
-      const enrollment = classEnrollments.find(e => e.userId === userId && e.classId === selectedClassId);
-      if (enrollment) {
-        // Remove from team if in one
-        const team = teams.find(t => t.id === enrollment.teamId);
-        if (team) {
-          await updateDoc(doc(db, 'teams', team.id), { members: team.members.filter(m => m !== userId) });
-        }
-        // Delete enrollment
-        await deleteDoc(doc(db, 'enrollments', enrollment.id));
-        showNotification('Student removed from class');
-      }
-    } catch { showNotification('Failed to remove student', 'error'); }
-    setConfirmDelete(null);
-  };
+What's the one sentence contribution? Currently it's muddy (is it methodology? mechanism? evolution?)
+How to frame relative to Schwert (2003) "anomalies disappear when published"?
+Should you cite more recent anomaly literature (McLean & Pontiff 2016, Chordia et al. 2014)?
+Are there any missing papers that referees will notice?
+Which journal is the best fit? JFE (empirical), JF (broad), RFS (methodology)?
+Deliverables:
 
-  const deleteTeam = async (teamId) => {
-    try {
-      // Remove team from all enrollments
-      const batch = writeBatch(db);
-      classEnrollments.filter(e => e.teamId === teamId).forEach(e => {
-        batch.update(doc(db, 'enrollments', e.id), { teamId: null });
-      });
-      batch.delete(doc(db, 'teams', teamId));
-      await batch.commit();
-      showNotification('Team deleted');
-    } catch { showNotification('Failed to delete team', 'error'); }
-    setConfirmDelete(null);
-  };
+Reframed introduction with clear contribution statement
+Updated literature review with strategic citations
+Journal targeting strategy
+Title revision for impact
+Expert 6: Academic Writing Editor
+Role: Ensure clarity and coherence
 
-  const deleteProject = async (projectId) => {
-    try {
-      const batch = writeBatch(db);
-      // Delete all peer evaluations for this project
-      peerEvaluations.filter(e => e.projectId === projectId).forEach(e => {
-        batch.delete(doc(db, 'peerEvaluations', e.id));
-      });
-      // Delete all team rankings for this project
-      teamRankings.filter(r => r.projectId === projectId).forEach(r => {
-        batch.delete(doc(db, 'teamRankings', r.id));
-      });
-      // Delete the project
-      batch.delete(doc(db, 'projects', projectId));
-      await batch.commit();
-      if (selectedProject === projectId) setSelectedProject(null);
-      showNotification('Project and all evaluations deleted');
-    } catch { showNotification('Failed to delete project', 'error'); }
-    setConfirmDelete(null);
-  };
+Key concerns to address:
 
-  const deleteAttendanceRecord = async (recordId) => {
-    try {
-      await deleteDoc(doc(db, 'attendanceRecords', recordId));
-      showNotification('Attendance record deleted');
-    } catch { showNotification('Failed to delete record', 'error'); }
-    setConfirmDelete(null);
-  };
+The paper introduces "Factor 1" and "Factor 2" before explaining what they mean—readers are confused
+The transmission mechanism section is dense—can you use a diagram?
+Some sentences are too long with too many clauses
+The counterfactual section comes late but is crucial—should it be earlier?
+Inconsistent terminology: "January effect," "January seasonality," "January response"
+Deliverables:
 
-  const clearAllEvaluations = async (projectId) => {
-    try {
-      const batch = writeBatch(db);
-      peerEvaluations.filter(e => e.projectId === projectId).forEach(e => {
-        batch.delete(doc(db, 'peerEvaluations', e.id));
-      });
-      teamRankings.filter(r => r.projectId === projectId).forEach(r => {
-        batch.delete(doc(db, 'teamRankings', r.id));
-      });
-      await batch.commit();
-      showNotification('All evaluations cleared');
-    } catch { showNotification('Failed to clear evaluations', 'error'); }
-    setConfirmDelete(null);
-  };
+Restructured paper outline
+Transmission mechanism flowchart/diagram
+Glossary of terms used consistently
+Tightened prose throughout
+Recommended Deployment Route
+Phase 1: FOUNDATION VERIFICATION (Critical Path)
+├── Expert 1 (Econometrician): Verify methodology
+│   └── Output: Validated identification, proper inference, robustness tests
+├── Expert 3 (Money & Banking): Verify factor interpretations
+│   └── Output: Institutional validation, break date analysis
+│
+Phase 2: THEORETICAL COHERENCE
+├── Expert 2 (Asset Pricing): Build theoretical framework
+│   └── Output: Why does predictable seasonality → abnormal returns?
+│
+Phase 3: STRESS TESTING
+├── Expert 4 (Referee Simulation): Attack the paper
+│   └── Output: List of all alternative explanations + tests
+│   └── Output: Additional robustness tables
+│
+Phase 4: POSITIONING & WRITING
+├── Expert 5 (Literature): Frame contribution
+│   └── Output: Rewritten intro, strategic citations
+├── Expert 6 (Writing): Polish exposition
+│   └── Output: Clear, coherent manuscript
+Implementation Suggestion
+Start with Expert 1 (Econometrician) and Expert 4 (Referee) in parallel. These will identify whether you have fundamental problems that require major revisions before investing in other refinements.
 
-  // Attendance
-  const generateAttendanceCode = async () => {
-    if (!selectedClassId) return;
-    try {
-      const code = generateCode();
-      const newCode = { id: generateId(), code, classId: selectedClassId, createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + codeExpiryMinutes * 60 * 1000).toISOString() };
-      await setDoc(doc(db, 'attendanceCodes', newCode.id), newCode);
-      showNotification(`Attendance code: ${code}`);
-    } catch { showNotification('Failed to generate code', 'error'); }
-  };
+If the econometrics and robustness pass scrutiny, proceed to Expert 2 (theory) and Expert 3 (institutional validation) to strengthen the interpretation.
 
-  const submitAttendance = async () => {
-    if (!selectedClassId || !attendanceInput.trim()) { showNotification('Please enter a code', 'error'); return; }
-    const code = attendanceCodes.find(c => c.code === attendanceInput.toUpperCase() && c.classId === selectedClassId && new Date(c.expiresAt) > new Date());
-    if (!code) { showNotification('Invalid or expired code', 'error'); return; }
-    const today = new Date().toDateString();
-    if (attendanceRecords.find(r => r.userId === currentUser.uid && r.classId === selectedClassId && new Date(r.timestamp).toDateString() === today)) {
-      showNotification('Already marked today', 'error'); return;
-    }
-    try {
-      const record = { id: generateId(), userId: currentUser.uid, classId: selectedClassId, code: code.code, timestamp: new Date().toISOString() };
-      await setDoc(doc(db, 'attendanceRecords', record.id), record);
-      setAttendanceInput('');
-      showNotification('Attendance marked!');
-    } catch { showNotification('Failed to mark attendance', 'error'); }
-  };
+Finally, use Expert 5 and Expert 6 to polish positioning and writing.
 
-  // Projects
-  const createProject = async () => {
-    if (!newProjectName.trim() || !selectedClassId) return;
-    try {
-      const newProject = { id: generateId(), name: newProjectName, classId: selectedClassId, createdAt: new Date().toISOString() };
-      await setDoc(doc(db, 'projects', newProject.id), newProject);
-      setNewProjectName('');
-      showNotification('Project created!');
-    } catch { showNotification('Failed to create project', 'error'); }
-  };
+Would you like me to become one of these experts now and begin a detailed analysis? I'd recommend starting with either:
 
-  // Evaluations
-  const selectProjectForPeerEval = (projectId) => {
-    const myTeam = getMyTeam();
-    if (!myTeam) { setSelectedProject(projectId); setEvalFormData({}); return; }
-    const teammates = myTeam.members.filter(m => m !== currentUser.uid);
-    const existing = peerEvaluations.filter(e => e.projectId === projectId && e.evaluatorId === currentUser.uid);
-    const data = {};
-    teammates.forEach((mid, idx) => { const ex = existing.find(e => e.targetId === mid); data[mid] = { ranking: ex?.ranking || (idx + 1), score: ex?.score || 5 }; });
-    setEvalFormData(data);
-    setSelectedProject(projectId);
-  };
+Expert 1 (Econometrician) to verify your core methodology, or
+Expert 4 (Referee Simulation) to identify the most critical weaknesses
+Which expert should we activate first?
 
-  const selectProjectForTeamRanking = (projectId) => {
-    const myTeam = getMyTeam();
-    const others = getClassTeams().filter(t => t.id !== myTeam?.id);
-    const existing = teamRankings.filter(r => r.projectId === projectId && r.evaluatorId === currentUser.uid);
-    const data = {};
-    others.forEach((team, idx) => { const ex = existing.find(r => r.targetTeamId === team.id); data[team.id] = { ranking: ex?.ranking || (idx + 1), presentation: ex?.presentation || 5, content: ex?.content || 5, creativity: ex?.creativity || 5 }; });
-    setTeamEvalFormData(data);
-    setSelectedProject(projectId);
-  };
+follow your Recommended Deployment Route
 
-  const submitPeerEvaluation = async () => {
-    if (!selectedProject) return;
-    const entries = Object.entries(evalFormData);
-    if (entries.length === 0) { showNotification('No teammates to evaluate', 'error'); return; }
-    try {
-      const batch = writeBatch(db);
-      peerEvaluations.filter(e => e.projectId === selectedProject && e.evaluatorId === currentUser.uid).forEach(e => batch.delete(doc(db, 'peerEvaluations', e.id)));
-      entries.forEach(([targetId, data]) => {
-        const evalDoc = { id: generateId(), projectId: selectedProject, classId: selectedClassId, evaluatorId: currentUser.uid, targetId, ranking: parseInt(data.ranking) || 1, score: parseInt(data.score) || 5, timestamp: new Date().toISOString() };
-        batch.set(doc(db, 'peerEvaluations', evalDoc.id), evalDoc);
-      });
-      await batch.commit();
-      showNotification('Peer evaluation submitted!');
-    } catch { showNotification('Failed to submit evaluation', 'error'); }
-  };
+Jan 30
 
-  const submitTeamRanking = async () => {
-    if (!selectedProject) return;
-    const entries = Object.entries(teamEvalFormData);
-    if (entries.length === 0) { showNotification('No teams to rank', 'error'); return; }
-    try {
-      const batch = writeBatch(db);
-      teamRankings.filter(r => r.projectId === selectedProject && r.evaluatorId === currentUser.uid).forEach(r => batch.delete(doc(db, 'teamRankings', r.id)));
-      const enrollment = classEnrollments.find(e => e.userId === currentUser.uid && e.classId === selectedClassId);
-      entries.forEach(([teamId, data]) => {
-        const rankDoc = { id: generateId(), projectId: selectedProject, classId: selectedClassId, evaluatorId: currentUser.uid, evaluatorTeamId: enrollment?.teamId, targetTeamId: teamId, ranking: parseInt(data.ranking) || 1, presentation: parseInt(data.presentation) || 5, content: parseInt(data.content) || 5, creativity: parseInt(data.creativity) || 5, timestamp: new Date().toISOString() };
-        batch.set(doc(db, 'teamRankings', rankDoc.id), rankDoc);
-      });
-      await batch.commit();
-      showNotification('Team rankings submitted!');
-    } catch { showNotification('Failed to submit rankings', 'error'); }
-  };
+Architected phased deployment strategy with parallel expert coordination
 
-  // Settings
-  const updateCodeExpiry = async (mins) => { try { await updateDoc(doc(db, 'settings', 'global'), { codeExpiryMinutes: mins }); setCodeExpiryMinutes(mins); showNotification(`Expiration set to ${mins} min`); } catch { showNotification('Failed to update', 'error'); } };
-  const updateRegistrationCode = async () => { if (newRegCode.length < 4) { showNotification('Code must be at least 4 characters', 'error'); return; } try { await updateDoc(doc(db, 'settings', 'global'), { registrationCode: newRegCode }); setRegistrationCode(newRegCode); setNewRegCode(''); showNotification('Registration code updated!'); } catch { showNotification('Failed to update', 'error'); } };
 
-  // Helpers
-  const getMyEnrollment = () => classEnrollments.find(e => e.userId === currentUser?.uid && e.classId === selectedClassId);
-  const getMyTeam = () => teams.find(t => t.id === getMyEnrollment()?.teamId);
-  const getClassTeams = () => teams.filter(t => t.classId === selectedClassId);
-  const getClassProjects = () => projects.filter(p => p.classId === selectedClassId);
-  const getClassStudents = () => classEnrollments.filter(e => e.classId === selectedClassId).map(e => users.find(u => u.id === e.userId)).filter(Boolean);
-  const getUserTeam = (userId) => { const enrollment = classEnrollments.find(e => e.userId === userId && e.classId === selectedClassId); return teams.find(t => t.id === enrollment?.teamId); };
 
-  const getAttendanceStats = () => {
-    const classRecords = attendanceRecords.filter(r => r.classId === selectedClassId);
-    const students = getClassStudents();
-    const dates = [...new Set(classRecords.map(r => new Date(r.timestamp).toDateString()))];
-    return { total: dates.length, students: students.map(s => ({ ...s, attended: classRecords.filter(r => r.userId === s.id).length, rate: dates.length ? Math.round(classRecords.filter(r => r.userId === s.id).length / dates.length * 100) : 0 }))};
-  };
 
-  const getAttendanceDetails = () => {
-    return attendanceRecords.filter(r => r.classId === selectedClassId).map(r => {
-      const student = users.find(u => u.id === r.userId);
-      return { ...r, studentName: student?.name || 'Unknown', studentEmail: student?.email || '' };
-    }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  };
+Deployment Route: Full Implementation Guide
+I'll structure this as a complete workflow. Since each expert should operate in a separate chat to maintain focus and depth, I'll provide you with:
 
-  const getPeerEvalResults = (projectId) => {
-    const evals = peerEvaluations.filter(e => e.projectId === projectId);
-    return getClassStudents().map(s => {
-      const received = evals.filter(e => e.targetId === s.id);
-      return { ...s, team: getUserTeam(s.id)?.name || 'No team', evalCount: received.length, avgRanking: received.length ? (received.reduce((a, e) => a + e.ranking, 0) / received.length).toFixed(1) : '-', avgScore: received.length ? (received.reduce((a, e) => a + e.score, 0) / received.length).toFixed(1) : '-' };
-    }).sort((a, b) => (parseFloat(a.avgRanking) || 99) - (parseFloat(b.avgRanking) || 99));
-  };
+Detailed briefs to paste into each expert chat
+Specific questions each expert must answer
+Deliverables checklist for each phase
+Integration instructions for combining outputs
+Phase 1: FOUNDATION VERIFICATION
+Run Expert 1 and Expert 3 in parallel. Do not proceed to Phase 2 until both complete.
 
-  const getTeamRankingResults = (projectId) => {
-    const rankings = teamRankings.filter(r => r.projectId === projectId);
-    return getClassTeams().map(t => {
-      const received = rankings.filter(r => r.targetTeamId === t.id);
-      return { ...t, evalCount: received.length, avgRanking: received.length ? (received.reduce((a, r) => a + r.ranking, 0) / received.length).toFixed(1) : '-', avgPresentation: received.length ? (received.reduce((a, r) => a + r.presentation, 0) / received.length).toFixed(1) : '-', avgContent: received.length ? (received.reduce((a, r) => a + r.content, 0) / received.length).toFixed(1) : '-', avgCreativity: received.length ? (received.reduce((a, r) => a + r.creativity, 0) / received.length).toFixed(1) : '-' };
-    }).sort((a, b) => (parseFloat(a.avgRanking) || 99) - (parseFloat(b.avgRanking) || 99));
-  };
+Expert 1: Econometrician
+Copy this prompt into a new chat:
 
-  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="text-amber-400 text-xl">Loading...</div></div>;
+You are an expert econometrician specializing in time-varying parameter models, Bayesian VAR methods, and identification in macroeconometrics. Your task is to rigorously evaluate the methodology of an academic paper targeting top finance journals (JFE, JF, RFS).
 
-  const cardStyle = "bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-2xl p-6 shadow-xl";
-  const inputStyle = "w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500";
-  const btnStyle = "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-semibold px-6 py-3 rounded-xl transition-all cursor-pointer disabled:opacity-50";
-  const btnSecondary = "bg-slate-700 hover:bg-slate-600 text-slate-100 px-4 py-2 rounded-xl transition cursor-pointer";
-  const btnDanger = "bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-xl transition border border-red-500/30 cursor-pointer";
-  const btnDangerSmall = "bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2 py-1 rounded-lg transition border border-red-500/30 cursor-pointer text-xs";
-  const tabStyle = (active) => `px-4 py-2 rounded-lg transition font-medium cursor-pointer ${active ? 'bg-amber-500 text-slate-900' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'}`;
+Your evaluation must be:
+- Technically precise (cite relevant econometrics literature)
+- Constructive (identify problems AND solutions)
+- Honest about what the methodology can and cannot support
 
-  // Confirmation Modal
-  const ConfirmModal = () => {
-    if (!confirmDelete) return null;
-    return (
-      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-        <div className={`${cardStyle} max-w-md w-full`}>
-          <h3 className="font-semibold text-lg mb-2 text-red-400">Confirm Delete</h3>
-          <p className="text-slate-300 mb-6">{confirmDelete.message}</p>
-          <div className="flex gap-3 justify-end">
-            <button onClick={() => setConfirmDelete(null)} className={btnSecondary}>Cancel</button>
-            <button onClick={confirmDelete.action} className={btnDanger}>Delete</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+The paper uses a TVP-FAVARX (Time-Varying Parameter Factor-Augmented VAR with Exogenous Variables) to study the January effect in stock returns. Key methodological features:
+- 6-variable VAR: IP, CPI, FFR, Factor 1, Factor 2, Stock Returns
+- 2 factors extracted from 10 money market variables via PCA
+- Block-recursive identification (slow block: IP, CPI; fast block: FFR, factors, returns)
+- Time-varying parameters following Primiceri (2005) random walk specification
+- January dummy as exogenous variable
+- Dynamic multipliers constructed for the dummy
+- Transmission analysis: regressing time-varying January responses on each other
 
-  // Login View
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex items-center justify-center p-4">
-        <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-2xl p-6 shadow-xl w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl mb-4">
-              <svg className="w-8 h-8 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-            </div>
-            <h1 className="text-2xl font-bold">ClassHub</h1>
-            <p className="text-slate-400 mt-1">Attendance & Peer Evaluation</p>
-            <p className="text-xs text-emerald-400 mt-2">🔒 Secured with Firebase Auth</p>
-          </div>
-          {notification && <div className={`mb-4 p-3 rounded-xl text-sm ${notification.type === 'error' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}`}>{notification.message}</div>}
-          {view === 'login' ? (
-            <div className="space-y-4">
-              <div><label className="block text-sm font-medium text-slate-400 mb-2">Email</label><input type="email" className={inputStyle} placeholder="your@email.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} disabled={authLoading} /></div>
-              <div><label className="block text-sm font-medium text-slate-400 mb-2">Password</label><input type="password" className={inputStyle} placeholder="••••••••" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} disabled={authLoading} /></div>
-              <button onClick={handleLogin} className={`${btnStyle} w-full`} disabled={authLoading}>{authLoading ? 'Signing in...' : 'Sign In'}</button>
-              <p className="text-center text-slate-400 text-sm">Don't have an account? <span onClick={() => setView('register')} className="text-amber-400 hover:text-amber-300 cursor-pointer">Register</span></p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div><label className="block text-sm font-medium text-slate-400 mb-2">Full Name</label><input type="text" className={inputStyle} placeholder="John Doe" value={registerName} onChange={e => setRegisterName(e.target.value)} disabled={authLoading} /></div>
-              <div><label className="block text-sm font-medium text-slate-400 mb-2">Email</label><input type="email" className={inputStyle} placeholder="you@email.com" value={registerEmail} onChange={e => setRegisterEmail(e.target.value)} disabled={authLoading} /></div>
-              <div><label className="block text-sm font-medium text-slate-400 mb-2">Password (min 6 chars)</label><input type="password" className={inputStyle} placeholder="••••••••" value={registerPassword} onChange={e => setRegisterPassword(e.target.value)} disabled={authLoading} /></div>
-              <div><label className="block text-sm font-medium text-slate-400 mb-2">Registration Code</label><input type="text" className={inputStyle} placeholder="Code from instructor" value={regCodeInput} onChange={e => setRegCodeInput(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && handleRegister()} maxLength={6} disabled={authLoading} /></div>
-              <button onClick={handleRegister} className={`${btnStyle} w-full`} disabled={authLoading}>{authLoading ? 'Creating account...' : 'Create Account'}</button>
-              <p className="text-center text-slate-400 text-sm">Already have an account? <span onClick={() => setView('login')} className="text-amber-400 hover:text-amber-300 cursor-pointer">Sign In</span></p>
-            </div>
-          )}
-          <p className="text-center text-slate-600 text-xs mt-6">© 2026 <a href="https://robinchen.org" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400">Zhengyang Chen</a> • University of Northern Iowa</p>
-        </div>
-      </div>
-    );
-  }
+I will provide the paper. Please analyze:
 
-  const isAdmin = userProfile?.role === 'admin';
-  const myClasses = isAdmin ? classes : classes.filter(c => classEnrollments.some(e => e.userId === currentUser?.uid && e.classId === c.id));
-  const selectedClass = classes.find(c => c.id === selectedClassId);
+1. IDENTIFICATION
+- Is block-recursive identification defensible for this application?
+- What assumptions does it impose? Are they testable?
+- What alternative identification strategies should be tested?
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <ConfirmModal />
-      {notification && <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg ${notification.type === 'error' ? 'bg-red-500/90' : 'bg-emerald-500/90'} text-white`}>{notification.message}</div>}
-      <header className="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
-              <svg className="w-5 h-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-            </div>
-            <div><h1 className="font-bold text-lg">ClassHub</h1><p className="text-xs text-slate-500">{isAdmin ? 'Instructor' : 'Student'} Portal</p></div>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-slate-400 text-sm hidden sm:inline">{userProfile?.name || currentUser?.email}</span>
-            <button onClick={handleLogout} className="text-slate-400 hover:text-slate-200 text-sm">Logout</button>
-          </div>
-        </div>
-      </header>
+2. ESTIMATION & INFERENCE
+- Is the Primiceri (2005) framework appropriate here?
+- With only 53 Januaries, how reliable are time-varying estimates?
+- The transmission regressions use generated regressors—are standard errors valid?
+- What corrections are needed?
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {!selectedClassId ? (
-          <div className="space-y-8">
-            <div className="text-center py-8"><h2 className="text-3xl font-bold mb-2">Select a Class</h2><p className="text-slate-400">{isAdmin ? 'Manage your classes or create a new one' : 'Join a class or select an existing one'}</p></div>
-            <div className={`${cardStyle} max-w-xl mx-auto`}>
-              {isAdmin ? (
-                <div><h3 className="font-semibold mb-4">Create New Class</h3><div className="flex gap-3"><input type="text" className={inputStyle} placeholder="e.g., ECON3371 Forecasting" value={newClassName} onChange={e => setNewClassName(e.target.value)} onKeyDown={e => e.key === 'Enter' && createClass()} /><button onClick={createClass} className={btnStyle}>Create</button></div></div>
-              ) : (
-                <div><h3 className="font-semibold mb-4">Join a Class</h3><div className="flex gap-3"><input type="text" className={inputStyle} placeholder="Enter class code" value={joinClassCode} onChange={e => setJoinClassCode(e.target.value.toUpperCase())} maxLength={6} onKeyDown={e => e.key === 'Enter' && joinClass()} /><button onClick={joinClass} className={btnStyle}>Join</button></div></div>
-              )}
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {myClasses.filter(c => !c.archived).map(cls => (
-                <div key={cls.id} className={`${cardStyle} cursor-pointer hover:border-amber-500/50 transition`} onClick={() => selectClass(cls.id)}>
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-xl flex items-center justify-center"><span className="text-amber-400 font-bold text-lg">{cls.name.charAt(0)}</span></div>
-                    {isAdmin && <span className="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded-lg font-mono">{cls.joinCode}</span>}
-                  </div>
-                  <h3 className="font-semibold mb-1">{cls.name}</h3>
-                  <p className="text-sm text-slate-500">{classEnrollments.filter(e => e.classId === cls.id).length} students • {teams.filter(t => t.classId === cls.id).length} teams</p>
-                </div>
-              ))}
-            </div>
-            {myClasses.filter(c => !c.archived).length === 0 && <div className="text-center py-12"><p className="text-slate-500">{isAdmin ? 'No classes yet. Create your first class above!' : 'No classes yet. Join using the code from your instructor.'}</p></div>}
-          </div>
-        ) : (
-          <div>
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-              <div className="flex items-center gap-4">
-                <button onClick={deselectClass} className="text-slate-400 hover:text-slate-200"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button>
-                <div><h2 className="text-2xl font-bold">{selectedClass?.name}</h2>{isAdmin && <p className="text-sm text-slate-500 font-mono">Join Code: {selectedClass?.joinCode}</p>}</div>
-              </div>
-              {isAdmin && <button onClick={() => archiveClass(selectedClassId)} className={btnDanger}>Archive</button>}
-            </div>
-            <div className="flex gap-2 mb-6 flex-wrap">
-              {isAdmin ? (<><button onClick={() => setActiveTab('dashboard')} className={tabStyle(activeTab === 'dashboard')}>Dashboard</button><button onClick={() => setActiveTab('attendance')} className={tabStyle(activeTab === 'attendance')}>Attendance</button><button onClick={() => setActiveTab('students')} className={tabStyle(activeTab === 'students')}>Students</button><button onClick={() => setActiveTab('teams')} className={tabStyle(activeTab === 'teams')}>Teams</button><button onClick={() => setActiveTab('projects')} className={tabStyle(activeTab === 'projects')}>Projects</button><button onClick={() => setActiveTab('evaluations')} className={tabStyle(activeTab === 'evaluations')}>Evaluations</button><button onClick={() => setActiveTab('settings')} className={tabStyle(activeTab === 'settings')}>Settings</button></>) : (<><button onClick={() => setActiveTab('dashboard')} className={tabStyle(activeTab === 'dashboard')}>Dashboard</button><button onClick={() => setActiveTab('attendance')} className={tabStyle(activeTab === 'attendance')}>Attendance</button><button onClick={() => setActiveTab('team')} className={tabStyle(activeTab === 'team')}>My Team</button><button onClick={() => setActiveTab('peer-eval')} className={tabStyle(activeTab === 'peer-eval')}>Peer Eval</button><button onClick={() => setActiveTab('team-eval')} className={tabStyle(activeTab === 'team-eval')}>Team Rankings</button></>)}
-            </div>
+3. FACTOR EXTRACTION
+- Why 2 factors? How should the number be determined?
+- How sensitive are results to factor selection criteria?
+- Should factors be re-extracted in each subsample or held fixed?
 
-            {activeTab === 'dashboard' && <div className="grid md:grid-cols-4 gap-4"><div className={cardStyle}><p className="text-slate-400 text-sm mb-1">{isAdmin ? 'Students' : 'My Team'}</p><p className="text-3xl font-bold">{isAdmin ? getClassStudents().length : (getMyTeam()?.name || 'None')}</p></div><div className={cardStyle}><p className="text-slate-400 text-sm mb-1">Teams</p><p className="text-3xl font-bold">{getClassTeams().length}</p></div><div className={cardStyle}><p className="text-slate-400 text-sm mb-1">Projects</p><p className="text-3xl font-bold">{getClassProjects().length}</p></div><div className={cardStyle}><p className="text-slate-400 text-sm mb-1">Attendance</p><p className="text-3xl font-bold">{isAdmin ? [...new Set(attendanceRecords.filter(r => r.classId === selectedClassId).map(r => new Date(r.timestamp).toDateString()))].length : attendanceRecords.filter(r => r.userId === currentUser.uid && r.classId === selectedClassId).length}</p></div></div>}
+4. SPECIFICATION TESTS NEEDED
+- What formal tests should be run (break tests, lag selection, etc.)?
+- How to test the random walk assumption vs. discrete breaks?
+- What robustness checks are essential?
 
-            {isAdmin && activeTab === 'attendance' && <div className="space-y-6"><div className={cardStyle}><h3 className="font-semibold mb-4">Generate Attendance Code</h3><button onClick={generateAttendanceCode} className={btnStyle}>Generate Code ({codeExpiryMinutes} min)</button>{attendanceCodes.filter(c => c.classId === selectedClassId && new Date(c.expiresAt) > new Date()).map(c => <div key={c.id} className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl"><p className="text-emerald-400 font-mono text-3xl">{c.code}</p><p className="text-sm text-slate-400 mt-1">Expires: {formatDate(c.expiresAt)}</p></div>)}</div><div className={cardStyle}><h3 className="font-semibold mb-4">Attendance Summary</h3>{getAttendanceStats().students.length > 0 ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">Student</th><th className="pb-3">Team</th><th className="pb-3">Attended</th><th className="pb-3">Rate</th></tr></thead><tbody>{getAttendanceStats().students.map(s => <tr key={s.id} className="border-b border-slate-800"><td className="py-3">{s.name}</td><td className="py-3 text-slate-400">{getUserTeam(s.id)?.name || '-'}</td><td className="py-3">{s.attended}/{getAttendanceStats().total}</td><td className="py-3"><span className={`px-2 py-1 rounded text-sm ${s.rate >= 80 ? 'bg-emerald-500/20 text-emerald-400' : s.rate >= 50 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{s.rate}%</span></td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No students enrolled</p>}</div><div className={cardStyle}><h3 className="font-semibold mb-4">All Attendance Records</h3>{getAttendanceDetails().length > 0 ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">Student</th><th className="pb-3">Date/Time</th><th className="pb-3">Code</th><th className="pb-3">Action</th></tr></thead><tbody>{getAttendanceDetails().map(r => <tr key={r.id} className="border-b border-slate-800"><td className="py-3">{r.studentName}</td><td className="py-3 text-slate-400">{formatDate(r.timestamp)}</td><td className="py-3 font-mono text-xs">{r.code}</td><td className="py-3"><button onClick={() => setConfirmDelete({ message: `Delete attendance record for ${r.studentName} on ${formatDate(r.timestamp)}?`, action: () => deleteAttendanceRecord(r.id) })} className={btnDangerSmall}>Delete</button></td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No records yet</p>}</div></div>}
+5. THE "FILTERED JANUARY EFFECT"
+- Is the counterfactual construction econometrically valid?
+- What does it actually identify?
 
-            {!isAdmin && activeTab === 'attendance' && <div className={cardStyle}><h3 className="font-semibold mb-4">Mark Attendance</h3><div className="flex gap-3 mb-6"><input type="text" className={inputStyle} placeholder="Enter code" value={attendanceInput} onChange={e => setAttendanceInput(e.target.value.toUpperCase())} maxLength={6} onKeyDown={e => e.key === 'Enter' && submitAttendance()} /><button onClick={submitAttendance} className={btnStyle}>Submit</button></div><h4 className="font-medium text-slate-300 mb-3">Your History</h4>{attendanceRecords.filter(r => r.userId === currentUser.uid && r.classId === selectedClassId).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).map(r => <div key={r.id} className="flex justify-between p-3 bg-slate-900/50 rounded-xl mb-2"><span>{formatDate(r.timestamp)}</span><span className="text-emerald-400">✓ Present</span></div>)}{attendanceRecords.filter(r => r.userId === currentUser.uid && r.classId === selectedClassId).length === 0 && <p className="text-slate-500 text-center py-4">No records yet</p>}</div>}
+Please be specific about what additional analysis the authors must do.
+Then upload the paper and request analysis.
 
-            {isAdmin && activeTab === 'students' && <div className={cardStyle}><h3 className="font-semibold mb-4">Students ({getClassStudents().length})</h3>{getClassStudents().length > 0 ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">Name</th><th className="pb-3">Email</th><th className="pb-3">Team</th><th className="pb-3">Action</th></tr></thead><tbody>{getClassStudents().map(s => <tr key={s.id} className="border-b border-slate-800"><td className="py-3">{s.name}</td><td className="py-3 text-slate-400">{s.email}</td><td className="py-3">{getUserTeam(s.id)?.name || '-'}</td><td className="py-3"><button onClick={() => setConfirmDelete({ message: `Remove ${s.name} from this class? Their attendance and evaluations will remain.`, action: () => deleteStudentFromClass(s.id) })} className={btnDangerSmall}>Remove</button></td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">Share code: <span className="font-mono text-amber-400">{selectedClass?.joinCode}</span></p>}</div>}
+Deliverables Checklist for Expert 1:
 
-            {isAdmin && activeTab === 'teams' && (getClassTeams().length > 0 ? <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">{getClassTeams().map(team => <div key={team.id} className={cardStyle}><div className="flex justify-between items-start mb-3"><h3 className="font-semibold">{team.name}</h3><button onClick={() => setConfirmDelete({ message: `Delete team "${team.name}"? Members will be removed from the team but stay in the class.`, action: () => deleteTeam(team.id) })} className={btnDangerSmall}>Delete</button></div><p className="text-sm text-slate-400 mb-3">{team.members.length} members</p>{team.members.map(mid => { const m = users.find(u => u.id === mid); return m ? <div key={mid} className="flex items-center gap-2 text-sm mb-1"><div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-xs">{m.name?.charAt(0) || '?'}</div><span>{m.name || m.email}</span></div> : null; })}</div>)}</div> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">No teams yet</p></div>)}
+ Assessment of block-recursive identification validity
+ List of testable restrictions and how to test them
+ Correction method for generated regressor problem in Table 4
+ Formal criteria for factor number selection (Bai-Ng tests)
+ Specification for break tests (Bai-Perron, or within TVP framework)
+ Assessment of effective sample size concerns
+ Validation or critique of filtered January effect construction
+ Complete list of additional robustness checks required
+Expert 3: Money & Banking Specialist
+Copy this prompt into a new chat:
 
-            {isAdmin && activeTab === 'projects' && <div className="space-y-6"><div className={cardStyle}><h3 className="font-semibold mb-4">Create Project</h3><div className="flex gap-3"><input type="text" className={inputStyle} placeholder="e.g., Midterm Presentation" value={newProjectName} onChange={e => setNewProjectName(e.target.value)} onKeyDown={e => e.key === 'Enter' && createProject()} /><button onClick={createProject} className={btnStyle}>Create</button></div></div>{getClassProjects().length > 0 ? <div className="grid md:grid-cols-2 gap-4">{getClassProjects().map(p => <div key={p.id} className={cardStyle}><div className="flex justify-between items-start mb-2"><h3 className="font-semibold">{p.name}</h3><button onClick={() => setConfirmDelete({ message: `Delete project "${p.name}" and ALL its evaluations? This cannot be undone.`, action: () => deleteProject(p.id) })} className={btnDangerSmall}>Delete</button></div><p className="text-sm text-slate-400">{peerEvaluations.filter(e => e.projectId === p.id).length} peer evals • {teamRankings.filter(r => r.projectId === p.id).length} team rankings</p></div>)}</div> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">Create projects like "Midterm Presentation"</p></div>}</div>}
+You are an expert in money markets, banking, and monetary policy implementation. You have deep knowledge of:
+- U.S. money market instruments (repos, commercial paper, money market funds, bank deposits)
+- Federal Reserve operating procedures and their evolution
+- Institutional changes in U.S. banking (sweep accounts, IOR, ON RRP, reserve regimes)
+- The flow of funds and household/corporate cash management
 
-            {isAdmin && activeTab === 'evaluations' && <div className="space-y-6">{getClassProjects().length > 0 ? <><div className="flex gap-3 flex-wrap">{getClassProjects().map(p => <button key={p.id} onClick={() => setSelectedProject(p.id)} className={tabStyle(selectedProject === p.id)}>{p.name}</button>)}</div>{selectedProject && <><div className={cardStyle}><div className="flex justify-between items-center mb-4"><h3 className="font-semibold">Peer Evaluation Results</h3><button onClick={() => setConfirmDelete({ message: `Clear ALL peer evaluations and team rankings for this project? This cannot be undone.`, action: () => clearAllEvaluations(selectedProject) })} className={btnDangerSmall}>Clear All Evaluations</button></div>{getPeerEvalResults(selectedProject).some(s => s.evalCount > 0) ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">#</th><th className="pb-3">Student</th><th className="pb-3">Team</th><th className="pb-3">Avg Rank</th><th className="pb-3">Avg Score</th></tr></thead><tbody>{getPeerEvalResults(selectedProject).map((s, i) => <tr key={s.id} className="border-b border-slate-800"><td className="py-3"><span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${i === 0 ? 'bg-amber-500 text-slate-900' : 'bg-slate-700'}`}>{i + 1}</span></td><td className="py-3">{s.name}</td><td className="py-3 text-slate-400">{s.team}</td><td className="py-3">{s.avgRanking}</td><td className="py-3">{s.avgScore}/10</td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No evaluations yet</p>}</div><div className={cardStyle}><h3 className="font-semibold mb-4">Team Ranking Results</h3>{getTeamRankingResults(selectedProject).some(t => t.evalCount > 0) ? <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="text-slate-400 text-sm border-b border-slate-700"><th className="pb-3">#</th><th className="pb-3">Team</th><th className="pb-3">Rank</th><th className="pb-3">Present</th><th className="pb-3">Content</th><th className="pb-3">Creative</th></tr></thead><tbody>{getTeamRankingResults(selectedProject).map((t, i) => <tr key={t.id} className="border-b border-slate-800"><td className="py-3"><span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${i === 0 ? 'bg-amber-500 text-slate-900' : 'bg-slate-700'}`}>{i + 1}</span></td><td className="py-3">{t.name}</td><td className="py-3">{t.avgRanking}</td><td className="py-3">{t.avgPresentation}</td><td className="py-3">{t.avgContent}</td><td className="py-3">{t.avgCreativity}</td></tr>)}</tbody></table></div> : <p className="text-slate-500 text-center py-4">No rankings yet</p>}</div></>}</> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">Create projects first</p></div>}</div>}
+Your task is to evaluate whether an academic paper's claims about money markets and their evolution are institutionally accurate.
 
-            {isAdmin && activeTab === 'settings' && <div className="space-y-6"><div className={cardStyle}><h3 className="font-semibold mb-4">Attendance Code Expiration</h3><select className={`${inputStyle} max-w-xs`} value={codeExpiryMinutes} onChange={e => updateCodeExpiry(parseInt(e.target.value))}><option value={2}>2 minutes</option><option value={3}>3 minutes</option><option value={5}>5 minutes</option><option value={10}>10 minutes</option><option value={15}>15 minutes</option><option value={30}>30 minutes</option><option value={60}>1 hour</option></select></div><div className={cardStyle}><h3 className="font-semibold mb-4">Registration Code</h3><p className="text-slate-400 text-sm mb-4">Students need this to register.</p><div className="bg-slate-900/50 rounded-xl p-4 mb-4"><p className="text-xs text-slate-500 mb-1">Current Code</p><p className="text-amber-400 font-mono text-2xl">{registrationCode}</p></div><div className="flex gap-3"><input type="text" className={inputStyle} placeholder="New code" value={newRegCode} onChange={e => setNewRegCode(e.target.value.toUpperCase())} maxLength={6} /><button onClick={updateRegistrationCode} className={btnStyle}>Update</button></div></div><div className={cardStyle}><h3 className="font-semibold mb-4">Share with Students</h3><div className="bg-slate-900/50 rounded-xl p-4 text-sm space-y-2"><p><span className="text-slate-500">1. Website:</span> <span className="text-slate-300">(share this page URL)</span></p><p><span className="text-slate-500">2. Registration Code:</span> <span className="text-amber-400 font-mono">{registrationCode}</span></p><p><span className="text-slate-500">3. Class Join Code:</span> <span className="text-amber-400 font-mono">{selectedClass?.joinCode}</span></p></div></div></div>}
+The paper studies the January effect in stock returns and argues:
+1. Two factors extracted from money market data capture "Banking Preference" and "Liquidity Preference"
+2. The transmission of January seasonality to stock returns operates through these money market channels
+3. Cash management has become more efficient over time, weakening the January effect
+4. Key institutional changes (1994 sweep programs, 2008 IOR, etc.) affected seasonal patterns
 
-            {!isAdmin && activeTab === 'team' && (getMyTeam() ? <div className={cardStyle}><div className="flex justify-between items-start mb-4"><h3 className="font-semibold text-xl">{getMyTeam().name}</h3><button onClick={leaveTeam} className={btnDanger}>Leave Team</button></div><p className="text-slate-400 mb-4">{getMyTeam().members.length} members</p>{getMyTeam().members.map(mid => { const m = users.find(u => u.id === mid); return m ? <div key={mid} className="flex items-center gap-3 p-3 bg-slate-900/50 rounded-xl mb-2"><div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center"><span className="text-amber-400 font-semibold">{m.name?.charAt(0) || '?'}</span></div><div><p className="font-medium">{m.name || 'Unknown'}</p><p className="text-slate-500 text-sm">{m.email}</p></div>{mid === currentUser.uid && <span className="ml-auto text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded">You</span>}</div> : null; })}</div> : <div className="space-y-6"><div className={cardStyle}><h3 className="font-semibold mb-4">Create a New Team</h3><div className="flex gap-3"><input type="text" className={inputStyle} placeholder="Team name" value={newTeamName} onChange={e => setNewTeamName(e.target.value)} onKeyDown={e => e.key === 'Enter' && createTeam()} /><button onClick={createTeam} className={btnStyle}>Create</button></div></div>{getClassTeams().length > 0 && <div className={cardStyle}><h3 className="font-semibold mb-4">Or Join Existing</h3><div className="grid md:grid-cols-2 gap-3">{getClassTeams().map(t => <div key={t.id} className="p-4 bg-slate-900/50 rounded-xl flex justify-between items-center"><div><p className="font-medium">{t.name}</p><p className="text-sm text-slate-500">{t.members.length} members</p></div><button onClick={() => joinTeam(t.id)} className={btnSecondary}>Join</button></div>)}</div></div>}</div>)}
+I will provide the paper. Please analyze:
 
-            {!isAdmin && activeTab === 'peer-eval' && (getClassProjects().length > 0 ? <div className="space-y-6"><div className="flex gap-3 flex-wrap">{getClassProjects().map(p => <button key={p.id} onClick={() => selectProjectForPeerEval(p.id)} className={tabStyle(selectedProject === p.id)}>{p.name}{peerEvaluations.some(e => e.projectId === p.id && e.evaluatorId === currentUser.uid) && ' ✓'}</button>)}</div>{selectedProject && getMyTeam() && (() => { const teammates = getMyTeam().members.filter(m => m !== currentUser.uid); return <div className={cardStyle}><h3 className="font-semibold mb-2">Evaluate Teammates</h3><div className="bg-slate-900/30 rounded-xl p-4 mb-6 text-sm"><p className="text-slate-300 font-medium mb-2">How to evaluate:</p><ul className="text-slate-400 space-y-1"><li><span className="text-amber-400">Rank:</span> Order by contribution (1 = most)</li><li><span className="text-amber-400">Score:</span> Rate contribution 1-10</li></ul><p className="text-slate-500 mt-2 text-xs">Evaluations are anonymous.</p></div>{teammates.length > 0 ? <>{teammates.map((mid, idx) => { const m = users.find(u => u.id === mid); const fd = evalFormData[mid] || { ranking: idx + 1, score: 5 }; return m ? <div key={mid} className="p-4 bg-slate-900/50 rounded-xl mb-4"><div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center"><span>{m.name?.charAt(0) || '?'}</span></div><p className="font-medium">{m.name || 'Unknown'}</p></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm text-slate-400 mb-2">Rank (1=best)</label><select className={inputStyle} value={fd.ranking} onChange={e => setEvalFormData({...evalFormData, [mid]: {...fd, ranking: parseInt(e.target.value)}})}>{teammates.map((_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}</select></div><div><label className="block text-sm text-slate-400 mb-2">Score: {fd.score}/10</label><input type="range" min="1" max="10" className="w-full accent-amber-500" value={fd.score} onChange={e => setEvalFormData({...evalFormData, [mid]: {...fd, score: parseInt(e.target.value)}})} /></div></div></div> : null; })}<button onClick={submitPeerEvaluation} className={btnStyle}>Submit Evaluation</button></> : <p className="text-slate-500 text-center py-4">No teammates to evaluate</p>}</div>; })()}{selectedProject && !getMyTeam() && <div className={cardStyle}><p className="text-slate-400 text-center py-8">Join a team first</p></div>}</div> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">No projects yet</p></div>)}
+1. FACTOR INTERPRETATION
+- Based on the factor loadings (Figure showing loadings on 10 money variables), is "Banking Preference" a valid label for Factor 1?
+- Is "Liquidity Preference" a valid label for Factor 2?
+- What alternative interpretations exist?
+- Are there better labels that are more precise?
 
-            {!isAdmin && activeTab === 'team-eval' && (getClassProjects().length > 0 ? <div className="space-y-6"><div className="flex gap-3 flex-wrap">{getClassProjects().map(p => <button key={p.id} onClick={() => selectProjectForTeamRanking(p.id)} className={tabStyle(selectedProject === p.id)}>{p.name}{teamRankings.some(r => r.projectId === p.id && r.evaluatorId === currentUser.uid) && ' ✓'}</button>)}</div>{selectedProject && (() => { const others = getClassTeams().filter(t => t.id !== getMyTeam()?.id); return <div className={cardStyle}><h3 className="font-semibold mb-2">Rank Other Teams</h3><div className="bg-slate-900/30 rounded-xl p-4 mb-6 text-sm"><p className="text-slate-300 font-medium mb-2">Criteria:</p><ul className="text-slate-400 space-y-1"><li><span className="text-amber-400">Rank:</span> Order by performance (1 = best)</li><li><span className="text-amber-400">Presentation/Content/Creativity:</span> Rate 1-10</li></ul><p className="text-slate-500 mt-2 text-xs">Rankings are anonymous.</p></div>{others.length > 0 ? <>{others.map((t, idx) => { const fd = teamEvalFormData[t.id] || { ranking: idx + 1, presentation: 5, content: 5, creativity: 5 }; return <div key={t.id} className="p-4 bg-slate-900/50 rounded-xl mb-4"><div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center"><span className="text-amber-400">{t.name.charAt(0)}</span></div><div><p className="font-medium">{t.name}</p><p className="text-sm text-slate-500">{t.members.length} members</p></div></div><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><div><label className="block text-sm text-slate-400 mb-2">Rank</label><select className={inputStyle} value={fd.ranking} onChange={e => setTeamEvalFormData({...teamEvalFormData, [t.id]: {...fd, ranking: parseInt(e.target.value)}})}>{others.map((_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}</select></div><div><label className="block text-sm text-slate-400 mb-2">Present: {fd.presentation}</label><input type="range" min="1" max="10" className="w-full accent-amber-500" value={fd.presentation} onChange={e => setTeamEvalFormData({...teamEvalFormData, [t.id]: {...fd, presentation: parseInt(e.target.value)}})} /></div><div><label className="block text-sm text-slate-400 mb-2">Content: {fd.content}</label><input type="range" min="1" max="10" className="w-full accent-amber-500" value={fd.content} onChange={e => setTeamEvalFormData({...teamEvalFormData, [t.id]: {...fd, content: parseInt(e.target.value)}})} /></div><div><label className="block text-sm text-slate-400 mb-2">Creative: {fd.creativity}</label><input type="range" min="1" max="10" className="w-full accent-amber-500" value={fd.creativity} onChange={e => setTeamEvalFormData({...teamEvalFormData, [t.id]: {...fd, creativity: parseInt(e.target.value)}})} /></div></div></div>; })}<button onClick={submitTeamRanking} className={btnStyle}>Submit Rankings</button></> : <p className="text-slate-500 text-center py-4">No other teams</p>}</div>; })()}</div> : <div className={cardStyle}><p className="text-slate-500 text-center py-4">No projects yet</p></div>)}
-          </div>
-        )}
-      </div>
-      
-      {/* Footer */}
-      <footer className="bg-slate-900/50 border-t border-slate-800 py-4 mt-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-xs">
-          <p>© 2026 <a href="https://robinchen.org" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400">Zhengyang Chen</a> • Economics Department, Wilson College of Business, University of Northern Iowa</p>
-        </div>
-      </footer>
-    </div>
-  );
-}
+2. INSTITUTIONAL ACCURACY
+- Is the timeline of institutional changes accurate?
+  - Retail sweep programs (January 1994)
+  - Interest on reserves (October 2008)
+  - ON RRP facility (September 2013)
+  - Ample reserves regime (January 2019)
+- How would each change affect seasonal patterns in money markets?
+- Are there other institutional changes the paper misses?
+
+3. CASH MANAGEMENT EVOLUTION
+- Is the claim that "cash management has become more efficient" supportable?
+- What evidence exists outside this paper?
+- How did sweep accounts specifically change the January cash management story?
+
+4. DATA QUALITY
+- The paper uses Center for Financial Stability (CFS) data for money aggregates
+- Is this the best source? How does it compare to Fed H.6 data?
+- Are there measurement issues with specific series (e.g., commercial paper, repos)?
+
+5. MECHANISM PLAUSIBILITY
+- The paper argues: Strong January production → cash generation → delayed equity deployment
+- Is this mechanism institutionally plausible?
+- How do corporations and households actually manage year-end/year-start cash?
+- What do we know about January bonus payments, tax refunds, etc.?
+
+Please be specific about any factual errors or unsupported claims.
+Then upload the paper and request analysis.
+
+Deliverables Checklist for Expert 3:
+
+ Validation or correction of factor labels
+ Verified timeline of institutional changes with citations
+ Assessment of which institutional changes create discrete breaks vs. gradual evolution
+ Evidence on cash management efficiency evolution (external to paper)
+ Data quality assessment (CFS vs. alternatives)
+ Institutional plausibility assessment of the transmission mechanism
+ List of any factual errors or unsupported institutional claims
+ Suggestions for additional institutional controls or subsample analysis
+Phase 1 Integration
+After both Expert 1 and Expert 3 complete, compile:
+
+Issue Identified	Source	Severity	Required Action
+[List each issue]	Expert 1 or 3	Critical/Major/Minor	[Specific fix]
+Decision Point: If any critical issues are identified (e.g., identification fails, factors are misinterpreted), these must be resolved before proceeding. You may need to re-run analysis or substantially revise the paper.
+
+Phase 2: THEORETICAL COHERENCE
+Only begin after Phase 1 issues are resolved or catalogued.
+
+Expert 2: Asset Pricing Theorist
+Copy this prompt into a new chat:
+
+You are an expert in asset pricing theory, market efficiency, and the economics of anomalies. You are familiar with:
+- Efficient market hypothesis and its limits
+- Risk-based explanations for return predictability
+- Behavioral finance explanations for anomalies
+- Limits to arbitrage literature
+- Consumption-based and liquidity-based asset pricing
+
+Your task is to evaluate whether an empirical paper's economic interpretation is theoretically coherent and whether it needs a formal model.
+
+The paper's main claims:
+1. The January effect in stock returns reflects "transmission of fundamental seasonality" from industrial production and money markets
+2. As IP seasonality strengthened over time, the equity January effect weakened (negative time-series relationship)
+3. The mechanism: IP generates cash → cash accumulates in savings deposits (Factor 1) → delayed equity deployment → January returns
+4. Cash management efficiency has improved, shortening the delay and weakening the effect
+5. After controlling for macro-monetary transmission, the "filtered January effect" is essentially zero—suggesting no residual anomaly
+
+I will provide the paper. Please analyze:
+
+1. THE CORE PUZZLE
+- If January seasonality is predictable (known calendar effect), why would it generate ABNORMAL returns?
+- Doesn't predictability violate market efficiency?
+- What theoretical framework can explain predictable abnormal returns?
+
+2. RISK-BASED VS. BEHAVIORAL
+- Could the January effect reflect time-varying risk premia rather than delayed cash deployment?
+- How would you distinguish risk-based from cash-management-based explanations?
+- What tests would differentiate these?
+
+3. THE NEGATIVE IP-STOCK RELATIONSHIP
+- The paper finds that stronger IP seasonality (over time) correlates with weaker January stock effects
+- The interpretation is "cash management efficiency"
+- What alternative interpretations exist?
+- Is this finding consistent with standard asset pricing theory?
+
+4. LIMITS TO ARBITRAGE
+- Small-cap stocks show stronger January effects than large-cap
+- Is this consistent with limits-to-arbitrage explanations?
+- How should the paper discuss this?
+
+5. NEED FOR A MODEL?
+- Does this paper need a formal theoretical model?
+- If yes, what would it look like? (Even a sketch)
+- If no, how should the economic mechanism be articulated more precisely?
+
+6. THE "NO RESIDUAL ANOMALY" CLAIM
+- The filtered January effect oscillates around zero
+- Does this mean the January effect is "not an anomaly"?
+- How should this be framed relative to market efficiency?
+
+Please provide specific recommendations for strengthening the theoretical coherence.
+Then upload the paper and request analysis.
+
+Deliverables Checklist for Expert 2:
+
+ Explanation of why predictable seasonality can generate abnormal returns (or why it can't)
+ Framework distinguishing risk-based vs. cash-management explanations
+ Specific tests to discriminate between alternative theories
+ Assessment of whether a formal model is needed
+ If model needed: sketch of model structure
+ If model not needed: improved articulation of mechanism
+ Framing recommendation for the "no residual anomaly" finding
+ Connection to relevant theoretical literature (limits to arbitrage, liquidity risk, etc.)
+Phase 3: STRESS TESTING
+This is the most critical phase for journal acceptance. Run after Phase 2.
+
+Expert 4: Empirical Finance Referee (Devil's Advocate)
+Copy this prompt into a new chat:
+
+You are a senior referee for a top finance journal (JFE, JF, or RFS). You have seen hundreds of papers on anomalies and are deeply skeptical of empirical claims. Your job is to find EVERY weakness in a paper before it goes to actual referees.
+
+Your approach:
+- Assume nothing the authors claim is true until proven
+- Identify all alternative explanations
+- Demand robustness to reasonable specification changes
+- Flag any data mining or p-hacking concerns
+- Note missing literature or tests
+- Be constructive: for each problem, suggest a solution
+
+The paper studies the January effect using a TVP-FAVARX model and claims:
+1. The January effect has weakened over time (not new, but quantified with TVP)
+2. January seasonality exists in IP, FFR, and money market factors (new claim)
+3. Macro-monetary seasonality transmits to stock returns (main contribution)
+4. The filtered January effect (after removing macro-monetary transmission) is essentially zero
+5. February shows a reversal pattern consistent with the mechanism
+
+I will provide the paper. Please provide a COMPREHENSIVE critique covering:
+
+1. ALTERNATIVE EXPLANATIONS NOT TESTED
+- Tax-loss selling (the classic explanation)—where is the test?
+- Window dressing by institutions
+- Turn-of-the-year effect vs. January effect
+- Earnings announcement seasonality
+- Any other explanations in the literature
+
+2. SPECIFICATION ROBUSTNESS
+- Different lag lengths (paper uses 4 lags—why?)
+- Different factor numbers (paper uses 2—why?)
+- Different sample periods (pre/post 1990, pre/post 2008)
+- Different stock return measures (size portfolios, industry portfolios)
+- Different transformations (what if you don't standardize?)
+
+3. DATA MINING CONCERNS
+- The authors chose specific variables, factors, horizons, sample
+- What if they tried many specifications and reported the best?
+- How should pre-registration logic be applied retroactively?
+
+4. CAUSALITY CONCERNS
+- Table 4 regresses time-varying coefficients on each other
+- This shows correlation, not causation
+- What would constitute causal evidence?
+- Granger causality tests? Instrumental variables?
+
+5. SMALL SAMPLE CONCERNS
+- Only 53 Januaries in 53 years
+- Time-varying parameters estimated from this—how reliable?
+- What power do the tests have?
+
+6. MISSING LITERATURE
+- What papers should be cited that aren't?
+- McLean & Pontiff (2016) on anomaly decay?
+- Chordia, Subrahmanyam & Tong (2014) on anomaly disappearance?
+- Other recent January effect papers?
+
+7. FRAMING ISSUES
+- Is the contribution clear?
+- Is the February analysis a "robustness check" or a separate finding?
+- What is the ONE thing this paper contributes?
+
+8. ADDITIONAL TESTS REQUIRED
+For each issue, specify EXACTLY what test should be run.
+
+Please organize as a formal referee report with:
+- Major concerns (must address for R&R)
+- Minor concerns (should address)
+- Suggestions (optional improvements)
+Then upload the paper and request the referee report.
+
+Deliverables Checklist for Expert 4:
+
+ List of all untested alternative explanations with specific tests
+ Complete specification robustness checklist
+ Assessment of data mining risk and mitigation strategies
+ Causality critique with suggested remedies
+ Power analysis or sample size discussion
+ Missing literature list with specific citations
+ Framing critique with specific rewording suggestions
+ Prioritized list: Critical / Major / Minor issues
+ For each issue: specific test or revision required
+Phase 3 Integration
+Create a master issues table:
+
+Issue	Source	Priority	Test/Revision Required	Status
+Tax-loss selling not tested	Expert 4	Critical	Include December returns, test interaction	Pending
+Generated regressor SEs	Expert 1	Critical	Bootstrap or Murphy-Topel correction	Pending
+Factor labels questioned	Expert 3	Major	Provide institutional justification	Pending
+...	...	...	...	...
+Run additional analysis to address critical and major issues before proceeding to Phase 4.
+
+Phase 4: POSITIONING & WRITING
+Only begin after Phase 3 issues are substantially addressed.
+
+Expert 5: Literature Strategist
+Copy this prompt into a new chat:
+
+You are a strategic advisor for academic publishing in top finance journals. You understand:
+- What makes papers publishable in JFE, JF, RFS
+- How to position contributions relative to existing literature
+- How to frame findings for maximum impact
+- Which journals are best fits for different paper types
+
+The paper studies the January effect with a TVP-FAVARX model. Current framing:
+- Title: [Blank in draft]
+- Main contribution: Shows January effect reflects transmission of macro-monetary seasonality
+
+I will provide the paper. Please advise on:
+
+1. CONTRIBUTION STATEMENT
+- What is the ONE sentence contribution?
+- Currently it seems to be multiple things:
+  a) Methodology (TVP-FAVARX for seasonal dummies)
+  b) New finding (IP and money market January seasonality)
+  c) Mechanism (transmission through cash management)
+  d) Evolution (effect weakened due to efficiency gains)
+- Which should be primary? How to unify?
+
+2. POSITIONING VS. KEY PAPERS
+- Schwert (2003): "Anomalies and market efficiency"—anomalies disappear when published
+- McLean & Pontiff (2016): Anomaly returns decay after publication
+- Keim (1983): Original small-cap January effect
+- Chang & Pinegar (1989): IP seasonality connection
+- Ogden (2003): Monetary conditions connection
+
+How should this paper position relative to each?
+
+3. JOURNAL FIT
+- JFE: Empirical, likes clean identification, policy relevance
+- JF: Broad audience, likes big-picture contributions
+- RFS: Methodological rigor, structural approaches
+- JFQA: Good for focused empirical work
+- Which is best fit and why?
+
+4. TITLE OPTIONS
+- Suggest 3-5 potential titles that signal contribution clearly
+
+5. ABSTRACT REWRITE
+- The current abstract is blank
+- Draft a compelling abstract (150 words max)
+
+6. INTRODUCTION RESTRUCTURE
+- Current intro is literature-heavy, contribution-light
+- Suggest restructured outline for intro
+- What should the first paragraph say?
+
+7. MISSING CITATIONS
+- What papers MUST be cited that aren't?
+- What papers are cited but shouldn't be prominent?
+
+Please be specific and provide draft language where helpful.
+Then upload the paper and request strategic advice.
+
+Deliverables Checklist for Expert 5:
+
+ One-sentence contribution statement
+ Positioning strategy vs. 5 key papers
+ Journal recommendation with rationale
+ 3-5 title options
+ Draft abstract (150 words)
+ Restructured introduction outline
+ First paragraph draft
+ Citation additions and deletions
+Expert 6: Academic Writing Editor
+Copy this prompt into a new chat:
+
+You are a professional academic editor specializing in finance and economics papers for top journals. Your expertise:
+- Clear, precise academic prose
+- Logical flow and structure
+- Consistent terminology
+- Effective use of figures and tables
+- Accessibility without sacrificing rigor
+
+Your task is to improve the clarity and readability of a technical paper on the January effect.
+
+I will provide the paper. Please analyze:
+
+1. STRUCTURAL ISSUES
+- Is the paper organized optimally?
+- Should any sections be reordered?
+- Is anything redundant or missing?
+- Should the February analysis be in main text or appendix?
+
+2. TERMINOLOGY CONSISTENCY
+- The paper uses: "January effect," "January seasonality," "January response," "January dummy"
+- Recommend consistent terminology with definitions
+
+3. CONCEPT INTRODUCTION
+- Factors 1 and 2 are used before being explained
+- What concepts need earlier introduction?
+- Where are readers likely to be confused?
+
+4. SENTENCE-LEVEL ISSUES
+- Flag overly long or complex sentences
+- Identify passive voice overuse
+- Note any jargon that needs explanation
+
+5. VISUAL AIDS
+- Would a diagram of the transmission mechanism help?
+- Are all figures necessary and well-designed?
+- Are tables formatted optimally?
+
+6. SPECIFIC REWRITES
+For the most problematic paragraphs, provide rewritten versions.
+
+7. READER JOURNEY
+- Map out what the reader learns at each stage
+- Identify any logical gaps or jumps
+- Ensure each section's purpose is clear
+
+Please provide specific, actionable edits, not just general advice.
+Then upload the paper and request detailed editing.
+
+Deliverables Checklist for Expert 6:
+
+ Restructuring recommendations (if any)
+ Terminology glossary with consistent definitions
+ List of concepts needing earlier introduction
+ Flagged problematic sentences with rewrites
+ Transmission mechanism diagram (description or sketch)
+ Figure/table improvement suggestions
+ Rewritten versions of 3-5 problematic paragraphs
+ Reader journey map identifying gaps
+Final Integration: Revised Manuscript
+After all phases complete, compile:
+
+1. Master Revision Checklist
+Section	Required Changes	Source Expert	Status
+Methodology	Add Bai-Ng factor tests	Expert 1	☐
+Methodology	Add break tests	Expert 1	☐
+Table 4	Bootstrap SEs for generated regressors	Expert 1	☐
+Factor discussion	Revise labels with institutional justification	Expert 3	☐
+Theory section	Add limits-to-arbitrage discussion	Expert 2	☐
+Robustness	Add tax-loss selling test	Expert 4	☐
+Robustness	Subsample analysis (pre/post 2008)	Expert 4	☐
+Introduction	Rewrite with clear contribution	Expert 5	☐
+Title/Abstract	New title and abstract	Expert 5	☐
+Throughout	Terminology consistency	Expert 6	☐
+Section 4	Transmission diagram	Expert 6	☐
+2. New Content to Write
+Theoretical framework section (from Expert 2)
+Additional robustness tables (from Expert 4)
+Rewritten introduction (from Expert 5)
+3. Quality Control
+Before submission, verify:
+
+ All critical issues from Expert 4 addressed
+ Econometric methods validated by Expert 1
+ Institutional claims validated by Expert 3
+ Theoretical coherence confirmed by Expert 2
+ Contribution clearly framed per Expert 5
+ Prose polished per Expert 6
+Ready to Begin?
+Next step: Open two new chats and paste the prompts for:
+
+Expert 1 (Econometrician)
+Expert 3 (Money & Banking Specialist)
+Upload the paper to each and begin Phase 1.
+
+Once you receive their analyses, return here and I can help you:
+
+Integrate their findings
+Resolve any conflicts between expert opinions
+Prioritize the revision agenda
+Proceed to Phase 2
+Would you like me to refine any of these expert prompts before you begin?
+
+
+pasted You are an expert econometrician specializing in time-varying parameter models, Bayesian VAR methods, and identification in macroeconometrics. Your task is to rigorously evaluate the methodology of an academic paper targeting top finance journals (JFE, JF, RFS). Your evaluation must be:
+
+pasted
+
+
+You are an expert in money markets, banking, and monetary policy implementation. You have deep knowledge of: - U.S. money market instruments (repos, commercial paper, money market funds, bank deposits) - Federal Reserve operating procedures and their evolution - Institutional changes in U.S. bank
+
+pasted
+
+Jan 30
+
+Synthesized expert findings and prioritized methodological concerns for integration
+
+
+
+
+
+
+
+Phase 1 Integration: Synthesizing Expert 1 & Expert 3 Findings
+Excellent work completing Phase 1. Both experts provided rigorous, nuanced assessments. Let me synthesize their findings into an actionable revision agenda.
+
+Executive Summary
+Expert	Overall Assessment	Critical Issues Found
+Expert 1 (Econometrician)	"Core finding likely robust, but presentation overstates precision"	3 critical, 3 important
+Expert 3 (Money & Banking)	"Mechanism somewhat oversimplified; factor interpretations deserve scrutiny"	2 high priority, 3 moderate
+Good news: Both experts found the paper methodologically sophisticated and the core findings likely valid. Neither identified fatal flaws.
+
+Concerning: Both experts independently flagged that the paper acknowledges limitations without fixing them—this is insufficient for top journals.
+
+Master Issues Table
+CRITICAL (Must Fix Before Submission)
+#	Issue	Source	Problem	Required Action	Effort
+1	Generated Regressor Inference	Expert 1	Table 3 t-statistics (e.g., -6.83) are invalid; HAC SEs ignore first-stage uncertainty	Bootstrap entire procedure OR use posterior draws OR Murphy-Topel correction	High
+2	Factor Number Selection	Expert 1	2 factors used without formal justification; Bai-Ng (2002) cited but criteria not reported	Report IC_p1, IC_p2, IC_p3 for k=1-5; sensitivity check with 1 and 3 factors	Medium
+3	Lag Length Selection	Expert 1	L=4 lags used without empirical justification	Report AIC/BIC/HQ for lags 1-6 in constant-parameter benchmark	Low
+4	Sweep Account Measurement	Expert 3	Post-1994 savings deposits inflated by retail sweeps; CFS adjustment status unclear	State whether CFS adjusts for sweeps; if not, acknowledge measurement artifact in Factor 1	Low
+5	Economic Agent Identification	Expert 3	Mechanism requires "someone" to park cash in savings before buying equities—who?	Explicitly identify the hypothesized agents (likely retail households); discuss flow magnitudes	Medium
+IMPORTANT (Should Address)
+#	Issue	Source	Problem	Required Action	Effort
+6	Ordering Robustness	Expert 1	Fast-block ordering [FFR, F₁, F₂, R] untested; FFR may respond to financial conditions contemporaneously	Test at least one alternative ordering (e.g., [F₁, F₂, R, FFR])	Medium
+7	Break vs. Drift Test	Expert 1	Random walk assumed; institutional breaks (2008) may warrant discrete specification	Report formal break test (Andrews SupF or Bai-Perron) OR model comparison (Bayes factor)	Medium
+8	Residual Diagnostics	Expert 1	No diagnostics reported	Add Ljung-Box (autocorrelation) and ARCH-LM (heteroskedasticity) tests	Low
+9	CP and Repo Data Limitations	Expert 3	These series have known measurement issues; CP reflects supply factors too	Acknowledge limitations; note CP trends reflect both supply and demand	Low
+10	Negative IP Coefficient Interpretation	Expert 3	Could be coincident trends, not causal relationship	Discuss alternative; consider time-trend control in transmission regression	Low
+MINOR (Desirable But Optional)
+#	Issue	Source	Problem	Suggested Action
+11	Factor labels imprecise	Expert 3	"Banking Preference" could be "Retail Deposit Preference"	Consider renaming for precision
+12	February reversal mechanism	Expert 3	Doesn't uniquely identify cash management vs. tax-loss selling	Soften uniqueness claim
+13	53-January interpretation	Expert 1	Non-January estimates are interpolations	Could note this; not strictly necessary
+14	Filtered effect mean-zero	Expert 1	Regression residuals mechanically mean zero	Acknowledge; emphasize trend absence
+Key Insights from Expert Convergence
+Where Experts Agree
+TVP Framework is Appropriate
+Expert 1: "The TVP-FAVARX approach is well-motivated"
+Expert 3: "The TVP approach is more flexible than sub-sample analysis"
+Core Finding Likely Robust
+Expert 1: "The strongest results are: the time-varying January effect declining from ~0.55 to ~0.30 SD"
+Expert 3: "The paper is methodologically sophisticated and mostly well-executed"
+Acknowledgment ≠ Solution
+Expert 1: "Acknowledging a problem is not the same as fixing it"
+Expert 3: "The paper treats the Factor 1 decline as reflecting behavioral changes, but part of this could be measurement artifact"
+Mechanism Needs Sharper Articulation
+Expert 1: "The paper conflates two distinct identification problems"
+Expert 3: "The mechanism has very different implications depending on the agents"
+Where Experts Offer Different Perspectives
+Topic	Expert 1 View	Expert 3 View	Resolution
+Sub-sample analysis	"Subsample factor extraction would raise new issues"	Initially suggested, then retracted	TVP approach supersedes; no action needed
+Alternative explanations	Focused on econometric alternatives (sign restrictions, instruments)	Focused on economic alternatives (tax-loss selling, window dressing)	Paper already addresses economic alternatives; econometric robustness via ordering check
+MMF reforms (2014-16)	Not mentioned	Initially flagged, then deemed unnecessary	No action needed
+Critical Path Analysis
+What Blocks Publication
+┌─────────────────────────────────────────────────────────────────┐
+│ BLOCKER #1: Generated Regressor Inference                       │
+│                                                                 │
+│ The transmission regressions (Table 3) are the paper's CENTRAL  │
+│ contribution. Without valid inference, the paper cannot claim   │
+│ statistical significance for the transmission mechanism.        │
+│                                                                 │
+│ → Must implement: Bootstrap, posterior integration, OR          │
+│   Murphy-Topel correction                                       │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ BLOCKER #2: Missing Standard Specification Tests                │
+│                                                                 │
+│ Top journals expect: factor selection criteria, lag selection,  │
+│ residual diagnostics. These are table-stakes requirements.      │
+│                                                                 │
+│ → Must add: Bai-Ng criteria, AIC/BIC for lags, Ljung-Box/ARCH  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ BLOCKER #3: Mechanism Vagueness                                 │
+│                                                                 │
+│ Who parks cash in savings deposits? Without identifying the     │
+│ agents, the mechanism is a black box. Referees will ask.        │
+│                                                                 │
+│ → Must clarify: Likely retail households; discuss flow sizes    │
+└─────────────────────────────────────────────────────────────────┘
+What Strengthens But Doesn't Block
+Ordering robustness (likely won't change results)
+Break tests (visual evidence suggests gradual drift)
+Data limitation acknowledgments (transparency issue)
+Recommended Actions Before Phase 2
+Before proceeding to Expert 2 (Asset Pricing Theorist), you should decide how to handle the critical issues. The theoretical coherence analysis will be more productive if the empirical foundation is solid.
+
+Immediate Technical Tasks (Can Be Done Now)
+Task	Estimated Effort	Why Now
+Report Bai-Ng criteria for factors	1-2 hours	Simple; uses existing data
+Report AIC/BIC/HQ for lag selection	1-2 hours	Simple; uses existing code
+Add Ljung-Box and ARCH-LM tests	1 hour	Standard diagnostics
+Clarify CFS sweep adjustment status	30 min	Quick literature/data check
+Substantial Revisions (Schedule Time)
+Task	Estimated Effort	Notes
+Bootstrap/posterior inference for Table 3	1-2 days	Computationally intensive
+Alternative ordering robustness	4-8 hours	Re-run TVP-FAVARX with different orderings
+Write "economic agents" paragraph	1-2 hours	Conceptual; cite retail flow literature
+Phase 2 Preparation
+Given the Phase 1 findings, here's how to modify the Expert 2 prompt to ensure the theoretical analysis builds on the identified issues:
+
+Addition to Expert 2 Prompt
+Add this context before uploading the paper:
+
+CONTEXT FROM PHASE 1 ANALYSIS:
+
+Two prior expert reviews identified the following issues relevant to 
+theoretical interpretation:
+
+1. The transmission mechanism operates through "Factor 1" (savings deposits) 
+   but post-1994 savings deposit data may be inflated by retail sweep 
+   programs (accounting changes, not behavioral changes).
+
+2. The paper does not explicitly identify which economic agents park cash 
+   in savings deposits before purchasing equities. This affects whether the 
+   mechanism is plausible at scale.
+
+3. The negative time-series relationship between IP seasonality and stock 
+   returns could reflect coincident trends rather than causal transmission.
+
+4. The paper's "filtered January effect" shows the residual oscillates 
+   around zero, but regression residuals mechanically have mean zero.
+
+Please consider these empirical concerns when evaluating the theoretical 
+coherence of the paper's mechanism.
+Decision Points for You
+Before I help you proceed to Phase 2, please confirm:
+
+Decision 1: Generated Regressor Fix
+Which approach will you use?
+
+Option A: Full bootstrap (most rigorous; 1-2 days of computation)
+Option B: Posterior draws from MCMC (if draws are saved; moderate effort)
+Option C: Murphy-Topel analytical correction (fastest; less standard in finance)
+Decision 2: Immediate vs. Deferred Fixes
+Option A: Fix critical issues BEFORE Phase 2 (delays theoretical analysis but provides cleaner foundation)
+Option B: Proceed to Phase 2 NOW with context about empirical limitations (faster but theoretical analysis may need revision)
+Decision 3: Expert 3's Agent Identification Concern
+The mechanism requires identifying who parks cash in savings deposits. Your response:
+
+Option A: This is retail households receiving year-end bonuses (plausible but requires flow magnitude evidence)
+Option B: This is small business owners with seasonal revenue patterns (alternative story)
+Option C: Acknowledge this as a limitation rather than claiming specific agents
+Ready for Phase 2?
+Once you've made these decisions, I can:
+
+Finalize the Expert 2 prompt with Phase 1 context
+Prepare the Expert 4 prompt incorporating econometric and institutional concerns
+Create a revision task tracker to monitor progress on critical fixes
+What would you like to do next?
